@@ -92,23 +92,27 @@ namespace Nop.Web.Framework.TagHelpers.Admin
                 output.Attributes.Add(d);
             }
 
-            //required asterisk
-            bool.TryParse(IsRequired, out bool required);
-            if (required)
-            {
-                output.PreElement.SetHtmlContent("<div class='input-group input-group-required'>");
-                output.PostElement.SetHtmlContent("<div class=\"input-group-btn\"><span class=\"required\">*</span></div></div>");
-            }
-
             //contextualize IHtmlHelper
             var viewContextAware = _htmlHelper as IViewContextAware;
             viewContextAware?.Contextualize(ViewContext);
+
+            var classString = "";
 
             //add form-control class
             bool.TryParse(RenderFormControlClass, out bool renderFormControlClass);
             object htmlAttributes = null;
             if (string.IsNullOrEmpty(RenderFormControlClass) && For.Metadata.ModelType.Name.Equals("String") || renderFormControlClass)
-                htmlAttributes = new {@class = "form-control"};
+                classString += "form-control";
+
+            htmlAttributes = new { @class = classString };
+
+            //add required asterisk
+            bool.TryParse(IsRequired, out bool required);
+            if (required)
+            {
+                output.PreElement.SetHtmlContent("<div class=\"required-form-control\">");
+                output.PostElement.SetHtmlContent("</div>");
+            }
             
             //generate editor
 

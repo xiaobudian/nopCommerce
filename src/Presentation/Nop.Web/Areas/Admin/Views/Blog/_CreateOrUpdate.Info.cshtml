@@ -69,12 +69,7 @@
                     <nop-label asp-for="Body" />
                 </div>
                 <div class="col-md-9">
-                    <div class="input-group input-group-required">
-                        <nop-editor asp-for="Body" asp-template="RichEditor"/>
-                        <div class="input-group-btn">
-                            <nop-required/>
-                        </div>
-                    </div>
+                    <nop-editor asp-for="Body" asp-template="RichEditor" asp-required="true"/>
                     <span asp-validation-for="Body"></span>
                 </div>
             </div>

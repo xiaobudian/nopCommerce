@@ -76,14 +76,6 @@ namespace Nop.Web.Framework.TagHelpers.Admin
             //clear the output
             output.SuppressOutput();
 
-            //required asterisk
-            bool.TryParse(IsRequired, out bool required);
-            if (required)
-            {
-                output.PreElement.SetHtmlContent("<div class='input-group input-group-required'>");
-                output.PostElement.SetHtmlContent("<div class=\"input-group-btn\"><span class=\"required\">*</span></div></div>");
-            }
-
             //contextualize IHtmlHelper
             var viewContextAware = _htmlHelper as IViewContextAware;
             viewContextAware?.Contextualize(ViewContext);
@@ -103,6 +95,8 @@ namespace Nop.Web.Framework.TagHelpers.Admin
                 }
             }
 
+            bool.TryParse(IsRequired, out bool required);
+            
             //generate editor
             var tagName = For != null ? For.Name : Name;
             bool.TryParse(IsMultiple, out bool multiple);
@@ -111,10 +105,17 @@ namespace Nop.Web.Framework.TagHelpers.Admin
                 IHtmlContent selectList;
                 if (multiple)
                 {
-                    selectList = _htmlHelper.Editor(tagName, "MultiSelect", new {htmlAttributes, SelectList = Items});
+                    selectList = _htmlHelper.Editor(tagName, "MultiSelect", new {htmlAttributes, SelectList = Items, required = required});
                 }
                 else
                 {
+                    //add required asterisk
+                    if (required)
+                    {
+                        output.PreElement.SetHtmlContent("<div class=\"required-form-control\">");
+                        output.PostElement.SetHtmlContent("</div>");
+                    }
+
                     if (htmlAttributes.ContainsKey("class"))
                         htmlAttributes["class"] += " form-control";
                     else

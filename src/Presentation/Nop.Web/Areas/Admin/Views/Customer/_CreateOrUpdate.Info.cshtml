@@ -159,12 +159,7 @@
                 <nop-label asp-for="SelectedCustomerRoleIds"/>
             </div>
             <div class="col-md-9">
-                <div class="input-group input-group-required">
-                    <nop-select asp-for="SelectedCustomerRoleIds" asp-items="Model.AvailableCustomerRoles" asp-multiple="true"/>
-                    <div class="input-group-btn">
-                        <nop-required />
-                    </div>
-                </div>
+                <nop-select asp-for="SelectedCustomerRoleIds" asp-items="Model.AvailableCustomerRoles" asp-multiple="true" asp-required="true"/>
                 <script>
                     $(document).ready(function() {
                         var customerRolesIdsInput = $('#@Html.IdFor(model => model.SelectedCustomerRoleIds)').data("kendoMultiSelect");

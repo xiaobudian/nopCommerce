@@ -1,5 +1,26 @@
-﻿@model List<int>
+﻿@using System.Collections.Generic
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model List<int>
+@{
+    bool required = false;
+    if (ViewData.ContainsKey("required"))
+    {
+        required = (bool)ViewData["required"];
+    }
+}
+
+@if (required)
+{
+    @Html.Raw("<div class=\"required-form-control\">")
+}
+
 <select asp-for="@Model" asp-items="@((IEnumerable<SelectListItem>)ViewData["SelectList"])"></select>
+
+@if (required)
+{
+    @Html.Raw("</div>")
+}
+
 <script>
     $(document).ready(function () {
         $("#@Html.IdForModel()").kendoMultiSelect({

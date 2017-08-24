@@ -771,6 +771,28 @@ td.k-state-focused.k-state-selected {
 }
 
 /* FORM ELEMENTS */
+.required-form-control {
+    position: relative;
+}
+
+.required-form-control > .form-control {
+    padding-left: 20px;
+}
+
+.required-form-control .radio, .required-form-control .checkbox {
+    padding-left: 20px;
+}
+
+.required-form-control:after {
+    content: "*";
+    color: #ff2e2e;
+    font-size: 16px;
+    font-weight: bold;
+    position: absolute;
+    z-index: 100;
+    left: 7px;
+    top: 0;
+}
 .form-horizontal .label-wrapper {
     display: table;
     float: left;
@@ -845,9 +867,6 @@ td.k-state-focused.k-state-selected {
 	width: 48px;
     display: inline-block;
 }
-.form-horizontal .attributes .input-group-required{
-    width: 320px;
-}
 
 .form-horizontal .k-autocomplete, .form-horizontal .k-combobox, 
 .form-horizontal .k-numerictextbox, .form-horizontal .k-dropdown, 
@@ -920,14 +939,6 @@ td.k-state-focused.k-state-selected {
 }
 .input-group.input-group-short .input-group-text {
     margin-left: 10px;
-}
-.input-group-required {
-    width: 100%;
-}
-.input-group-required .input-group-btn{
-    font-size: inherit;
-    vertical-align: top;
-    width: 1.5%;
 }
 input[type=file].form-control {
     height: auto;

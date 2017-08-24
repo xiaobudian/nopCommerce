@@ -758,6 +758,25 @@ td.k-state-focused.k-state-selected {
 }
 
 /* FORM ELEMENTS */
+.required-form-control {
+    position: relative;
+}
+.required-form-control > .form-control {
+    padding-right: 20px;
+}
+.required-form-control .radio, .required-form-control .checkbox {
+    padding-right: 20px;
+}
+.required-form-control:after {
+    content: "*";
+    color: #ff2e2e;
+    font-size: 16px;
+    font-weight: bold;
+    position: absolute;
+    z-index: 100;
+    right: 7px;
+    top: 0;
+}
 .form-horizontal .label-wrapper {
     display: table;
     float: right;
@@ -820,6 +839,9 @@ td.k-state-focused.k-state-selected {
 .form-group .attributes label{
 	font-weight: normal;
 }
+.form-group .attributes .required-form-control {
+    display: table;
+}
 .form-horizontal .attributes select {
     width: 300px !important;
     max-width: 100%;
@@ -830,9 +852,6 @@ td.k-state-focused.k-state-selected {
 .form-group .attributes .qty-box {
 	width: 48px;
     display: inline-block;
-}
-.form-horizontal .attributes .input-group-required{
-    width: 320px;
 }
 
 .form-horizontal .k-autocomplete, .form-horizontal .k-combobox, 
@@ -906,14 +925,6 @@ td.k-state-focused.k-state-selected {
 }
 .input-group.input-group-short .input-group-text {
     margin-right: 10px;
-}
-.input-group-required {
-    width: 100%;
-}
-.input-group-required .input-group-btn{
-    font-size: inherit;
-    vertical-align: top;
-    width: 1.5%;
 }
 input[type=file].form-control {
     height: auto;

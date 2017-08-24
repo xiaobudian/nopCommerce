@@ -53,12 +53,12 @@ namespace Nop.Web.Framework.TagHelpers.Admin
             var colsNumber = output.Attributes.ContainsName("cols") ? output.Attributes["cols"].Value : 20;
             output.Attributes.SetAttribute("cols", colsNumber);
 
-            //required asterisk
+            //add required asterisk
             bool.TryParse(IsRequired, out bool required);
             if (required)
             {
-                output.PreElement.SetHtmlContent("<div class='input-group input-group-required'>");
-                output.PostElement.SetHtmlContent("<div class=\"input-group-btn\"><span class=\"required\">*</span></div></div>");
+                output.PreElement.SetHtmlContent("<div class=\"required-form-control\">");
+                output.PostElement.SetHtmlContent("</div>");
             }
 
             base.Process(context, output);

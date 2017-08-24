@@ -15,12 +15,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-required">
-                        <nop-editor asp-for="RecipientName" />
-                        <div class="input-group-btn">
-                            <nop-required />
-                        </div>
-                    </div>
+                    <nop-editor asp-for="RecipientName" asp-required="true" />
                 </div>
             </div>
             @if (Model.GiftCardType == Nop.Core.Domain.Catalog.GiftCardType.Virtual)
@@ -35,12 +30,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="input-group input-group-required">
-                            <nop-editor asp-for="RecipientEmail" />
-                            <div class="input-group-btn">
-                                <nop-required />
-                            </div>
-                        </div>
+                        <nop-editor asp-for="RecipientEmail" asp-required="true" />
                     </div>
                 </div>
             }
@@ -54,12 +44,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-required">
-                        <nop-editor asp-for="SenderName" />
-                        <div class="input-group-btn">
-                            <nop-required />
-                        </div>
-                    </div>
+                    <nop-editor asp-for="SenderName" asp-required="true" />
                 </div>
             </div>
             @if (Model.GiftCardType == Nop.Core.Domain.Catalog.GiftCardType.Virtual)
@@ -74,12 +59,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="input-group input-group-required">
-                            <nop-editor asp-for="SenderEmail" />
-                            <div class="input-group-btn">
-                                <nop-required />
-                            </div>
-                        </div>
+                        <nop-editor asp-for="SenderEmail" asp-required="true" />
                     </div>
                 </div>
             }

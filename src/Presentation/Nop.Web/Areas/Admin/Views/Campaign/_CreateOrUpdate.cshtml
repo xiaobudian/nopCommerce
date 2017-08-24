@@ -85,12 +85,7 @@
                                 //that's why we use this workaround
                                 //we store a value into "ViewData" and then use it in the RichEditor.cshtml file
                                 ViewData["nop.RichEditor.EnableFullPage"] = true;
-                                <div class="input-group input-group-required">
-                                    <nop-editor asp-for="Body" asp-template="RichEditor" />
-                                    <div class="input-group-btn">
-                                        <nop-required/>
-                                    </div>
-                                </div>
+                                <nop-editor asp-for="Body" asp-template="RichEditor" asp-required="true"/>
                             }
                             else
                             {

@@ -131,23 +131,18 @@
                             <div class="col-md-9">
                                 @if (adminAreaSettings.UseRichEditorInMessageTemplates)
                                 {
-                                    <div class="input-group input-group-required">
-                                        <nop-editor asp-for="Body" asp-template="RichEditor" />
-                                        <div class="input-group-btn">
-                                            <nop-required />
-                                        </div>
-                                    </div>
+                                    <nop-editor asp-for="Body" asp-template="RichEditor" asp-required="true"/>
                                 }
                                 else
                                 {
                                     <nop-textarea asp-for="Body" asp-required="true" />
                                     <text>
-                                    <script type="text/javascript">
-                              $(document).ready(function() {
-                                  $('#@Html.IdFor(model => model.Body)')
-                                      .height($('#@Html.IdFor(model => model.Body)')[0].scrollHeight);
-                              });
-                                    </script>
+                                        <script type="text/javascript">
+                                              $(document).ready(function() {
+                                                  $('#@Html.IdFor(model => model.Body)')
+                                                      .height($('#@Html.IdFor(model => model.Body)')[0].scrollHeight);
+                                              });
+                                        </script>
                                     </text>
                                 }
                                 <span asp-validation-for="Body"></span>
