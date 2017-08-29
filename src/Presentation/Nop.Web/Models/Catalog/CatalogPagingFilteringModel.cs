@@ -437,7 +437,7 @@ namespace Nop.Web.Models.Catalog
                 NotFilteredItems = allFilters.Except(alreadyFilteredOptions).Select(x =>
                 {
                     //filter URL
-                    var alreadyFiltered = alreadyFilteredSpecOptionIds.Concat(new List<int> { x.SpecificationAttributeOptionId });
+                    var alreadyFiltered = alreadyFilteredSpecOptionIds.Concat(new List<int> { x.SpecificationAttributeOptionId }).OrderBy(id => id);
                     var queryString = $"{QUERYSTRINGPARAM}={GenerateFilteredSpecQueryParam(alreadyFiltered.ToList())}";
                     var filterUrl = webHelper.ModifyQueryString(webHelper.GetThisPageUrl(true), queryString, null);
 
