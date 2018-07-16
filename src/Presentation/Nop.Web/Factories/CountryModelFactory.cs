@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Nop.Core;
 using Nop.Core.Caching;
-using Nop.Core.Domain.Directory;
 using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Web.Infrastructure.Cache;
@@ -19,27 +18,28 @@ namespace Nop.Web.Factories
 		#region Fields
 
         private readonly ICountryService _countryService;
-        private readonly IStateProvinceService _stateProvinceService;
         private readonly ILocalizationService _localizationService;
-        private readonly IWorkContext _workContext;
+        private readonly IStateProvinceService _stateProvinceService;
         private readonly IStaticCacheManager _cacheManager;
+        private readonly IWorkContext _workContext;
 
 	    #endregion
 
-		#region Constructors
+		#region Ctor
 
-        public CountryModelFactory(ICountryService countryService, 
-            IStateProvinceService stateProvinceService, 
-            ILocalizationService localizationService, 
-            IWorkContext workContext,
-            IStaticCacheManager cacheManager)
-		{
+        public CountryModelFactory(ICountryService countryService,
+
+            ILocalizationService localizationService,
+            IStateProvinceService stateProvinceService,
+            IStaticCacheManager cacheManager,
+            IWorkContext workContext)
+        {
             this._countryService = countryService;
-            this._stateProvinceService = stateProvinceService;
             this._localizationService = localizationService;
-            this._workContext = workContext;
+            this._stateProvinceService = stateProvinceService;
             this._cacheManager = cacheManager;
-		}
+            this._workContext = workContext;
+        }
 
         #endregion
 
@@ -53,10 +53,10 @@ namespace Nop.Web.Factories
         /// <returns>List of identifiers and names of states and provinces</returns>
         public virtual IList<StateProvinceModel> GetStatesByCountryId(string countryId, bool addSelectStateItem)
         {
-            if (String.IsNullOrEmpty(countryId))
+            if (string.IsNullOrEmpty(countryId))
                 throw new ArgumentNullException(nameof(countryId));
 
-            string cacheKey = string.Format(ModelCacheEventConsumer.STATEPROVINCES_BY_COUNTRY_MODEL_KEY, countryId, addSelectStateItem, _workContext.WorkingLanguage.Id);
+            var cacheKey = string.Format(ModelCacheEventConsumer.STATEPROVINCES_BY_COUNTRY_MODEL_KEY, countryId, addSelectStateItem, _workContext.WorkingLanguage.Id);
             var cachedModel = _cacheManager.Get(cacheKey, () =>
             {
                 var country = _countryService.GetCountryById(Convert.ToInt32(countryId));
@@ -66,9 +66,8 @@ namespace Nop.Web.Factories
                     result.Add(new StateProvinceModel
                     {
                         id = state.Id,
-                        name = state.GetLocalized(x => x.Name)
+                        name = _localizationService.GetLocalized(state, x => x.Name)
                     });
-
 
                 if (country == null)
                 {

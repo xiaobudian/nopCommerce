@@ -6,38 +6,44 @@ using Nop.Core.Data;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Messages;
 using Nop.Data;
+using Nop.Data.Extensions;
 using Nop.Services.Events;
 
 namespace Nop.Services.Messages
 {
+    /// <summary>
+    /// Queued email service
+    /// </summary>
     public partial class QueuedEmailService : IQueuedEmailService
     {
-        private readonly IRepository<QueuedEmail> _queuedEmailRepository;
-        private readonly IDbContext _dbContext;
-        private readonly IDataProvider _dataProvider;
-        private readonly CommonSettings _commonSettings;
-        private readonly IEventPublisher _eventPublisher;
+        #region Fields
 
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="queuedEmailRepository">Queued email repository</param>
-        /// <param name="eventPublisher">Event published</param>
-        /// <param name="dbContext">DB context</param>
-        /// <param name="dataProvider">WeData provider</param>
-        /// <param name="commonSettings">Common settings</param>
-        public QueuedEmailService(IRepository<QueuedEmail> queuedEmailRepository,
+        private readonly CommonSettings _commonSettings;
+        private readonly IDataProvider _dataProvider;
+        private readonly IDbContext _dbContext;
+        private readonly IEventPublisher _eventPublisher;
+        private readonly IRepository<QueuedEmail> _queuedEmailRepository;
+
+        #endregion
+
+        #region Ctor
+
+        public QueuedEmailService(CommonSettings commonSettings,
+            IDataProvider dataProvider,
+            IDbContext dbContext,
             IEventPublisher eventPublisher,
-            IDbContext dbContext, 
-            IDataProvider dataProvider, 
-            CommonSettings commonSettings)
+            IRepository<QueuedEmail> queuedEmailRepository)
         {
-            _queuedEmailRepository = queuedEmailRepository;
-            _eventPublisher = eventPublisher;
-            this._dbContext = dbContext;
-            this._dataProvider = dataProvider;
             this._commonSettings = commonSettings;
+            this._dataProvider = dataProvider;
+            this._dbContext = dbContext;
+            this._eventPublisher = eventPublisher;
+            this._queuedEmailRepository = queuedEmailRepository;
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Inserts a queued email
@@ -132,7 +138,7 @@ namespace Nop.Services.Messages
             var queuedEmails = query.ToList();
             //sort by passed identifiers
             var sortedQueuedEmails = new List<QueuedEmail>();
-            foreach (int id in queuedEmailIds)
+            foreach (var id in queuedEmailIds)
             {
                 var queuedEmail = queuedEmails.Find(x => x.Id == id);
                 if (queuedEmail != null)
@@ -156,17 +162,17 @@ namespace Nop.Services.Messages
         /// <param name="pageSize">Page size</param>
         /// <returns>Email item list</returns>
         public virtual IPagedList<QueuedEmail> SearchEmails(string fromEmail,
-            string toEmail, DateTime? createdFromUtc, DateTime? createdToUtc, 
+            string toEmail, DateTime? createdFromUtc, DateTime? createdToUtc,
             bool loadNotSentItemsOnly, bool loadOnlyItemsToBeSent, int maxSendTries,
             bool loadNewest, int pageIndex = 0, int pageSize = int.MaxValue)
         {
-            fromEmail = (fromEmail ?? String.Empty).Trim();
-            toEmail = (toEmail ?? String.Empty).Trim();
-            
+            fromEmail = (fromEmail ?? string.Empty).Trim();
+            toEmail = (toEmail ?? string.Empty).Trim();
+
             var query = _queuedEmailRepository.Table;
-            if (!String.IsNullOrEmpty(fromEmail))
+            if (!string.IsNullOrEmpty(fromEmail))
                 query = query.Where(qe => qe.From.Contains(fromEmail));
-            if (!String.IsNullOrEmpty(toEmail))
+            if (!string.IsNullOrEmpty(toEmail))
                 query = query.Where(qe => qe.To.Contains(toEmail));
             if (createdFromUtc.HasValue)
                 query = query.Where(qe => qe.CreatedOnUtc >= createdFromUtc);
@@ -195,22 +201,16 @@ namespace Nop.Services.Messages
         /// </summary>
         public virtual void DeleteAllEmails()
         {
-            if (_commonSettings.UseStoredProceduresIfSupported && _dataProvider.StoredProceduredSupported)
-            {
-                //although it's not a stored procedure we use it to ensure that a database supports them
-                //we cannot wait until EF team has it implemented - http://data.uservoice.com/forums/72025-entity-framework-feature-suggestions/suggestions/1015357-batch-cud-support
+            //do all databases support "Truncate command"?
+            var queuedEmailTableName = _dbContext.GetTableName<QueuedEmail>();
+            _dbContext.ExecuteSqlCommand($"TRUNCATE TABLE [{queuedEmailTableName}]");
 
+            //var queuedEmails = _queuedEmailRepository.Table.ToList();
+            //foreach (var qe in queuedEmails)
+            //    _queuedEmailRepository.Delete(qe);
 
-                //do all databases support "Truncate command"?
-                string queuedEmailTableName = _dbContext.GetTableName<QueuedEmail>();
-                _dbContext.ExecuteSqlCommand($"TRUNCATE TABLE [{queuedEmailTableName}]");
-            }
-            else
-            {
-                var queuedEmails = _queuedEmailRepository.Table.ToList();
-                foreach (var qe in queuedEmails)
-                    _queuedEmailRepository.Delete(qe);
-            }
         }
+
+        #endregion
     }
 }

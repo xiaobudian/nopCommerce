@@ -2,7 +2,7 @@
 @model CustomerModel
 @if (Model.CountryEnabled && Model.StateProvinceEnabled)
 {
-    <script type="text/javascript">
+    <script>
         $(document).ready(function() {
             $("#@Html.IdFor(model => model.CountryId)").change(function() {
                 var selectedItem = $(this).val();
@@ -33,6 +33,7 @@
     </script>
 }
 <div class="panel-group">
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.CustomerDetailsInfoTop, additionalData = Model })
     <div class="panel panel-default">
         <div class="panel-body">
             @if (Model.UsernamesEnabled)
@@ -88,7 +89,7 @@
 
                             //local datasource
                             var externalauthrecords = [
-                            @for (int i = 0; i < Model.AssociatedExternalAuthRecords.Count; i++)
+                            @for (var i = 0; i < Model.AssociatedExternalAuthRecords.Count; i++)
                             {
                                 var aear = Model.AssociatedExternalAuthRecords[i];
                                 <text>
@@ -169,7 +170,8 @@
                     $(document).ready(function() {
                         var customerRolesIdsInput = $('#@Html.IdFor(model => model.SelectedCustomerRoleIds)').data("kendoMultiSelect");
                         customerRolesIdsInput.setOptions({
-                            customerRolesIdsInput: false
+                            customerRolesIdsInput: false,
+                            filter: "contains"
                         });
 
                         @if (Model.AvailableCustomerRoles.Count == 0)
@@ -315,6 +317,18 @@
                     </div>
                 </div>
             }
+            @if (Model.CountyEnabled)
+            {
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="County" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="County" />
+                        <span asp-validation-for="County"></span>
+                    </div>
+                </div>
+            }
             @if (Model.CountryEnabled)
             {
                 <div class="form-group">
@@ -419,13 +433,15 @@
                     </div>
                     <div class="col-md-9">
                         <nop-editor asp-for="VatNumber"/>
-                        (@string.Format(T("Admin.Customers.Customers.Fields.VatNumberStatus").Text, Model.VatNumberStatusNote))
-                        <button type="submit" name="markVatNumberAsValid" class="btn btn-primary">
-                            @T("Admin.Customers.Customers.Fields.VatNumber.MarkAsValid")
-                        </button>
-                        <button type="submit" name="markVatNumberAsInvalid" class="btn bg-red">
-                            @T("Admin.Customers.Customers.Fields.VatNumber.MarkAsInvalid")
-                        </button>
+                        <div class="margin-t-5">
+                            (@string.Format(T("Admin.Customers.Customers.Fields.VatNumberStatus").Text, Model.VatNumberStatusNote))
+                            <button type="submit" name="markVatNumberAsValid" class="btn btn-primary">
+                                @T("Admin.Customers.Customers.Fields.VatNumber.MarkAsValid")
+                            </button>
+                            <button type="submit" name="markVatNumberAsInvalid" class="btn bg-red">
+                                @T("Admin.Customers.Customers.Fields.VatNumber.MarkAsInvalid")
+                            </button>
+                        </div>
                         <span asp-validation-for="VatNumber"></span>
                     </div>
                 </div>
@@ -441,8 +457,8 @@
                         {
                             <div class="checkbox">
                                 <label>
-                                    <input type="checkbox" name="SelectedNewsletterSubscriptionStoreIds" value="@store.Id" checked="@(Model.SelectedNewsletterSubscriptionStoreIds != null && Model.SelectedNewsletterSubscriptionStoreIds.Contains(store.Id))" />
-                                    (@(store.Name))
+                                    <input type="checkbox" name="SelectedNewsletterSubscriptionStoreIds" value="@store.Value" checked="@store.Selected" />
+                                    (@(store.Text))
                                 </label>
                             </div>
                         }
@@ -506,7 +522,7 @@
                     </div>
                 </div>
             }
-            @if (Model.Id > 0 && !String.IsNullOrEmpty(Model.LastVisitedPage))
+            @if (Model.Id > 0 && !string.IsNullOrEmpty(Model.LastVisitedPage))
             {
                 <div class="form-group">
                     <div class="col-md-3">
@@ -519,4 +535,5 @@
             }
         </div>
     </div>
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.CustomerDetailsInfoBottom, additionalData = Model })
 </div>

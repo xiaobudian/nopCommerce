@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Nop.Core.Extensions;
 using Nop.Core.Infrastructure;
 using Nop.Core.Plugins;
 using Nop.Services.Logging;
@@ -12,16 +11,22 @@ namespace Nop.Services.Events
     /// </summary>
     public class EventPublisher : IEventPublisher
     {
+        #region Fields
+
         private readonly ISubscriptionService _subscriptionService;
 
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="subscriptionService"></param>
+        #endregion
+
+        #region Ctor
+
         public EventPublisher(ISubscriptionService subscriptionService)
         {
             _subscriptionService = subscriptionService;
         }
+
+        #endregion
+
+        #region Utilities
 
         /// <summary>
         /// Publish to cunsumer
@@ -51,6 +56,10 @@ namespace Nop.Services.Events
             }
         }
 
+        #endregion
+
+        #region Methods
+
         /// <summary>
         /// Publish event
         /// </summary>
@@ -66,5 +75,6 @@ namespace Nop.Services.Events
             subscribers.ForEach(subscriber => PublishToConsumer(subscriber, eventMessage));
         }
 
+        #endregion
     }
 }

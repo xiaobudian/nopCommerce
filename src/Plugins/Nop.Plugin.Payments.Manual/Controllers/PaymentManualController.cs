@@ -6,15 +6,14 @@ using Nop.Services;
 using Nop.Services.Configuration;
 using Nop.Services.Localization;
 using Nop.Services.Security;
-using Nop.Services.Stores;
+using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Mvc.Filters;
-using Nop.Web.Framework.Security;
 
 namespace Nop.Plugin.Payments.Manual.Controllers
 {
     [AuthorizeAdmin]
-    [Area("Admin")]
+    [Area(AreaNames.Admin)]
     public class PaymentManualController : BasePaymentController
     {
         #region Fields
@@ -22,8 +21,7 @@ namespace Nop.Plugin.Payments.Manual.Controllers
         private readonly ILocalizationService _localizationService;
         private readonly IPermissionService _permissionService;
         private readonly ISettingService _settingService;
-        private readonly IStoreService _storeService;
-        private readonly IWorkContext _workContext;
+        private readonly IStoreContext _storeContext;
 
         #endregion
 
@@ -32,14 +30,12 @@ namespace Nop.Plugin.Payments.Manual.Controllers
         public PaymentManualController(ILocalizationService localizationService,
             IPermissionService permissionService,
             ISettingService settingService,
-            IStoreService storeService,
-            IWorkContext workContext)
+            IStoreContext storeContext)
         {
             this._localizationService = localizationService;
             this._permissionService = permissionService;
             this._settingService = settingService;
-            this._storeService = storeService;
-            this._workContext = workContext;
+            this._storeContext = storeContext;
         }
 
         #endregion
@@ -52,7 +48,7 @@ namespace Nop.Plugin.Payments.Manual.Controllers
                 return AccessDeniedView();
 
             //load settings for a chosen store scope
-            var storeScope = this.GetActiveStoreScopeConfiguration(_storeService, _workContext);
+            var storeScope = _storeContext.ActiveStoreScopeConfiguration;
             var manualPaymentSettings = _settingService.LoadSetting<ManualPaymentSettings>(storeScope);
 
             var model = new ConfigurationModel
@@ -84,7 +80,7 @@ namespace Nop.Plugin.Payments.Manual.Controllers
                 return Configure();
 
             //load settings for a chosen store scope
-            var storeScope = this.GetActiveStoreScopeConfiguration(_storeService, _workContext);
+            var storeScope = _storeContext.ActiveStoreScopeConfiguration;
             var manualPaymentSettings = _settingService.LoadSetting<ManualPaymentSettings>(storeScope);
 
             //save settings

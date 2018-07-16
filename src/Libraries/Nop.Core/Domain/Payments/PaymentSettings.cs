@@ -3,6 +3,9 @@ using Nop.Core.Configuration;
 
 namespace Nop.Core.Domain.Payments
 {
+    /// <summary>
+    /// Payment settings
+    /// </summary>
     public class PaymentSettings : ISettings
     {
         public PaymentSettings()

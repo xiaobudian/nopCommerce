@@ -2,10 +2,11 @@
 @using Nop.Core.Domain.Catalog
 
 <div class="panel-group">
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.CheckoutAttributeDetailsConditionTop, additionalData = Model })
     <div class="panel panel-default">
         @if (Model.Id > 0)
         {
-            <script type="text/javascript">
+            <script>
                 $(document).ready(function () {
                     $("#@Html.IdFor(model => model.ConditionModel.EnableCondition)").click(toggleEnableCondition);
                     toggleEnableCondition();
@@ -30,8 +31,7 @@
                         <span asp-validation-for="ConditionModel.EnableCondition"></span>
                     </div>
                 </div>
-
-                <div id="pnlAttributes">
+                <nop-nested-setting asp-for="ConditionModel.EnableCondition" id="pnlAttributes">
                     @if (Model.ConditionModel.ConditionAttributes.Count > 0)
                     {
                         <div class="form-group">
@@ -41,7 +41,7 @@
                             <div class="col-md-9">
                                 <nop-select asp-for="ConditionModel.SelectedAttributeId" asp-items="@(Model.ConditionModel.ConditionAttributes.Select(x => new SelectListItem() {Text = x.Name, Value = x.Id.ToString()}))"/>
                                 
-                                <script type="text/javascript">
+                                <script>
                                     $(document).ready(function() {
                                         $("#@Html.IdFor(model => model.ConditionModel.SelectedAttributeId)")
                                             .change(toggleConditionAttributes);
@@ -59,8 +59,9 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <div class="col-md-9 col-md-offset-3">
-                                @for (int i = 0; i < Model.ConditionModel.ConditionAttributes.Count; i++)
+                            <div class="col-md-3">&nbsp;</div>
+                            <div class="col-md-9">
+                                @for (var i = 0; i < Model.ConditionModel.ConditionAttributes.Count; i++)
                                 {
                                     <input type="hidden" asp-for="@Model.ConditionModel.ConditionAttributes[i].Id"/>
                                     <div id="@($"pnl_attribute_values_{Model.ConditionModel.ConditionAttributes[i].Id}")">
@@ -116,7 +117,7 @@
                             </div>
                         </div>
                     }
-                </div>
+                </nop-nested-setting>
             </div>
         }
         else
@@ -126,4 +127,5 @@
             </div>
         }
     </div>
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.CheckoutAttributeDetailsConditionBottom, additionalData = Model })
 </div>

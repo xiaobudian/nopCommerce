@@ -1,9 +1,9 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
 using Nop.Core.Domain.Media;
+using Nop.Core.Infrastructure;
 using Nop.Services.Media;
 using Nop.Web.Framework.Mvc.Filters;
 
@@ -14,14 +14,17 @@ namespace Nop.Web.Areas.Admin.Controllers
         #region Fields
 
         private readonly IDownloadService _downloadService;
+        private readonly INopFileProvider _fileProvider;
 
         #endregion
 
         #region Ctor
 
-        public DownloadController(IDownloadService downloadService)
+        public DownloadController(IDownloadService downloadService,
+            INopFileProvider fileProvider)
         {
             this._downloadService = downloadService;
+            this._fileProvider = fileProvider;
         }
 
         #endregion
@@ -41,8 +44,8 @@ namespace Nop.Web.Areas.Admin.Controllers
             if (download.DownloadBinary == null)
                 return Content($"Download data is not available any more. Download GD={download.Id}");
 
-            string fileName = !String.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
-            string contentType = !String.IsNullOrWhiteSpace(download.ContentType)
+            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
+            var contentType = !string.IsNullOrWhiteSpace(download.ContentType)
                 ? download.ContentType
                 : MimeTypes.ApplicationOctetStream;
             return new FileContentResult(download.DownloadBinary, contentType)
@@ -53,7 +56,7 @@ namespace Nop.Web.Areas.Admin.Controllers
 
         [HttpPost]
         //do not validate request token (XSRF)
-        [AdminAntiForgery(true)] 
+        [AdminAntiForgery(true)]
         public virtual IActionResult SaveDownloadUrl(string downloadUrl)
         {
             //insert
@@ -63,7 +66,7 @@ namespace Nop.Web.Areas.Admin.Controllers
                 UseDownloadUrl = true,
                 DownloadUrl = downloadUrl,
                 IsNew = true
-              };
+            };
             _downloadService.InsertDownload(download);
 
             return Json(new { downloadId = download.Id });
@@ -74,7 +77,6 @@ namespace Nop.Web.Areas.Admin.Controllers
         [AdminAntiForgery(true)]
         public virtual IActionResult AsyncUpload()
         {
-
             var httpPostedFile = Request.Form.Files.FirstOrDefault();
             if (httpPostedFile == null)
             {
@@ -82,35 +84,34 @@ namespace Nop.Web.Areas.Admin.Controllers
                 {
                     success = false,
                     message = "No file uploaded",
-                    downloadGuid = Guid.Empty,
+                    downloadGuid = Guid.Empty
                 });
             }
 
-            var fileBinary = httpPostedFile.GetDownloadBits();
+            var fileBinary = _downloadService.GetDownloadBits(httpPostedFile);
 
             var qqFileNameParameter = "qqfilename";
             var fileName = httpPostedFile.FileName;
-            if (String.IsNullOrEmpty(fileName) && Request.Form.ContainsKey(qqFileNameParameter))
+            if (string.IsNullOrEmpty(fileName) && Request.Form.ContainsKey(qqFileNameParameter))
                 fileName = Request.Form[qqFileNameParameter].ToString();
             //remove path (passed in IE)
-            fileName = Path.GetFileName(fileName);
+            fileName = _fileProvider.GetFileName(fileName);
 
             var contentType = httpPostedFile.ContentType;
 
-            var fileExtension = Path.GetExtension(fileName);
-            if (!String.IsNullOrEmpty(fileExtension))
+            var fileExtension = _fileProvider.GetFileExtension(fileName);
+            if (!string.IsNullOrEmpty(fileExtension))
                 fileExtension = fileExtension.ToLowerInvariant();
-
 
             var download = new Download
             {
                 DownloadGuid = Guid.NewGuid(),
                 UseDownloadUrl = false,
-                DownloadUrl = "",
+                DownloadUrl = string.Empty,
                 DownloadBinary = fileBinary,
                 ContentType = contentType,
                 //we store filename without extension for downloads
-                Filename = Path.GetFileNameWithoutExtension(fileName),
+                Filename = _fileProvider.GetFileNameWithoutExtension(fileName),
                 Extension = fileExtension,
                 IsNew = true
             };
@@ -118,9 +119,12 @@ namespace Nop.Web.Areas.Admin.Controllers
 
             //when returning JSON the mime-type must be set to text/plain
             //otherwise some browsers will pop-up a "Save As" dialog.
-            return Json(new { success = true, 
-                downloadId = download.Id, 
-                downloadUrl = Url.Action("DownloadFile", new { downloadGuid= download.DownloadGuid }) });
+            return Json(new
+            {
+                success = true,
+                downloadId = download.Id,
+                downloadUrl = Url.Action("DownloadFile", new { downloadGuid = download.DownloadGuid })
+            });
         }
 
         #endregion

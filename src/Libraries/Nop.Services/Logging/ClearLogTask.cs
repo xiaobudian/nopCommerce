@@ -7,12 +7,22 @@ namespace Nop.Services.Logging
     /// </summary>
     public partial class ClearLogTask : IScheduleTask
     {
+        #region Fields
+
         private readonly ILogger _logger;
+
+        #endregion
+
+        #region Ctor
 
         public ClearLogTask(ILogger logger)
         {
             this._logger = logger;
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Executes a task
@@ -21,5 +31,7 @@ namespace Nop.Services.Logging
         {
             _logger.ClearLog();
         }
+
+        #endregion
     }
 }

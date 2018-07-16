@@ -1,11 +1,9 @@
-﻿@using Nop.Services.Stores
-@model ProductReviewListModel
-@inject AdminAreaSettings adminAreaSettings
+﻿@model ProductReviewSearchModel
+
+@using Nop.Services.Stores
 @inject IStoreService storeService
 
 @{
-    var defaultGridPageSize = adminAreaSettings.DefaultGridPageSize;
-    var gridPageSizes = adminAreaSettings.GridPageSizes;
     var stores = storeService.GetAllStores();
 
     //page title
@@ -19,10 +17,10 @@
     <h1 class="pull-left">
         @T("Admin.Catalog.ProductReviews")
     </h1>
-    @if (!Model.IsLoggedInAsVendor)
-    {
-        //these buttons are not visible to vendors
-        <div class="pull-right">
+    <div class="pull-right">
+        @if (!Model.IsLoggedInAsVendor)
+        {
+            //these buttons are not visible to vendors
             <button type="button" id="approve-selected" class="btn bg-green">
                 <i class="fa fa-check-square-o"></i>
                 @T("Admin.Catalog.ProductReviews.ApproveSelected")
@@ -35,8 +33,10 @@
                 <i class="fa fa-trash-o"></i>
                 @T("Admin.Catalog.ProductReviews.DeleteSelected")
             </button>
-        </div>
-    }
+            <nop-action-confirmation asp-button-id="delete-selected" />
+        }
+        @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.ProductReviewListButtons })
+    </div>
 </div>
 
 <div class="content">
@@ -84,7 +84,7 @@
                                 </div>
                                 <div class="col-md-8">
                                     <input type="text" class="form-control" id="search-product-name" autocomplete="off" />
-                                    <script type="text/javascript">
+                                    <script>
                                     $(document).ready(function() {
                                         $('#search-product-name').autocomplete({
                                             delay: 500,
@@ -150,7 +150,18 @@
                                             url: "@Html.Raw(Url.Action("List", "ProductReview"))",
                                             type: "POST",
                                             dataType: "json",
-                                            data: additionalData
+                                            data: function() {
+                                                var data = {
+                                                    CreatedOnFrom: $('#@Html.IdFor(model => model.CreatedOnFrom)').val(),
+                                                    CreatedOnTo: $('#@Html.IdFor(model => model.CreatedOnTo)').val(),
+                                                    SearchText: $('#@Html.IdFor(model => model.SearchText)').val(),
+                                                    SearchStoreId: $('#@Html.IdFor(model => model.SearchStoreId)').val(),
+                                                    SearchProductId: $('#@Html.IdFor(model => model.SearchProductId)').val(),
+                                                    SearchApprovedId: $('#SearchApprovedId').val()
+                                                };
+                                                addAntiForgeryToken(data);
+                                                return data;
+                                            }
                                         }
                                     },
                                     schema: {
@@ -163,14 +174,14 @@
                                         // Cancel the changes
                                         this.cancelChanges();
                                     },
-                                    pageSize: @(defaultGridPageSize),
+                                    pageSize: @(Model.PageSize),
                                     serverPaging: true,
                                     serverFiltering: true,
                                     serverSorting: true
                                 },
                                 pageable: {
                                     refresh: true,
-                                    pageSizes: [@(gridPageSizes)],
+                                    pageSizes: [@(Model.AvailablePageSizes)],
                                     @await Html.PartialAsync("_GridPagerMessages")
                                 },
                                 scrollable: false,
@@ -245,7 +256,7 @@
                         });
                     </script>
 
-                    <script type="text/javascript">
+                    <script>
                         var selectedIds = [];
 
                         $(document).ready(function() {
@@ -316,32 +327,28 @@
                             });
 
                             //"delete selected" button
-                            $('#delete-selected').click(function(e) {
-                                e.preventDefault();
-
+                            $("#delete-selected-action-confirmation-submit-button").bind("click", function () {
                                 var postData = {
                                     selectedIds: selectedIds
                                 };
                                 addAntiForgeryToken(postData);
-
                                 $.ajax({
                                     cache: false,
                                     type: "POST",
                                     url: "@(Url.Action("DeleteSelected", "ProductReview"))",
                                     data: postData,
-                                    complete: function(data) {
+                                    complete: function (data) {
                                         //reload grid
                                         var grid = $('#productreviews-grid').data('kendoGrid');
                                         grid.dataSource.read();
                                     },
-                                    error: function(xhr, ajaxOptions, thrownError) {
+                                    error: function (xhr, ajaxOptions, thrownError) {
                                         alert(thrownError);
-                                    },
-                                    traditional: true
+                                    }
                                 });
+                                $('#delete-selected-action-confirmation').modal('toggle');
                                 return false;
                             });
-
 
                             $('#mastercheckbox').click(function() {
                                 $('.checkboxGroups').attr('checked', $(this).is(':checked')).change();
@@ -368,19 +375,6 @@
                                 updateMasterCheckbox();
                             });
                         });
-
-                        function additionalData() {
-                            var data = {
-                                CreatedOnFrom: $('#@Html.IdFor(model => model.CreatedOnFrom)').val(),
-                                CreatedOnTo: $('#@Html.IdFor(model => model.CreatedOnTo)').val(),
-                                SearchText: $('#@Html.IdFor(model => model.SearchText)').val(),
-                                SearchStoreId: $('#@Html.IdFor(model => model.SearchStoreId)').val(),
-                                SearchProductId: $('#@Html.IdFor(model => model.SearchProductId)').val(),
-                                SearchApprovedId: $('#SearchApprovedId').val()
-                            };
-                            addAntiForgeryToken(data);
-                            return data;
-                        }
 
                         function onDataBound(e) {
 

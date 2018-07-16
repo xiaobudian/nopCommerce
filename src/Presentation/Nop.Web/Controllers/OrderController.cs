@@ -23,37 +23,37 @@ namespace Nop.Web.Controllers
         #region Fields
 
         private readonly IOrderModelFactory _orderModelFactory;
-        private readonly IOrderService _orderService;
-        private readonly IShipmentService _shipmentService;
-        private readonly IWorkContext _workContext;
         private readonly IOrderProcessingService _orderProcessingService;
+        private readonly IOrderService _orderService;
         private readonly IPaymentService _paymentService;
         private readonly IPdfService _pdfService;
+        private readonly IShipmentService _shipmentService;
         private readonly IWebHelper _webHelper;
+        private readonly IWorkContext _workContext;
         private readonly RewardPointsSettings _rewardPointsSettings;
 
         #endregion
 
-		#region Constructors
+		#region Ctor
 
         public OrderController(IOrderModelFactory orderModelFactory,
-            IOrderService orderService, 
-            IShipmentService shipmentService, 
-            IWorkContext workContext,
             IOrderProcessingService orderProcessingService, 
+            IOrderService orderService, 
             IPaymentService paymentService, 
-            IPdfService pdfService, 
+            IPdfService pdfService,
+            IShipmentService shipmentService, 
             IWebHelper webHelper,
+            IWorkContext workContext,
             RewardPointsSettings rewardPointsSettings)
         {
             this._orderModelFactory = orderModelFactory;
-            this._orderService = orderService;
-            this._shipmentService = shipmentService;
-            this._workContext = workContext;
             this._orderProcessingService = orderProcessingService;
+            this._orderService = orderService;
             this._paymentService = paymentService;
             this._pdfService = pdfService;
+            this._shipmentService = shipmentService;
             this._webHelper = webHelper;
+            this._workContext = workContext;
             this._rewardPointsSettings = rewardPointsSettings;
         }
 
@@ -82,7 +82,7 @@ namespace Nop.Web.Controllers
                 return Challenge();
 
             //get recurring payment identifier
-            int recurringPaymentId = 0;
+            var recurringPaymentId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("cancelRecurringPayment", StringComparison.InvariantCultureIgnoreCase))
                     recurringPaymentId = Convert.ToInt32(formValue.Substring("cancelRecurringPayment".Length));
@@ -102,10 +102,8 @@ namespace Nop.Web.Controllers
 
                 return View(model);
             }
-            else
-            {
-                return RedirectToRoute("CustomerOrders");
-            }
+
+            return RedirectToRoute("CustomerOrders");
         }
 
         //My account / Orders / Retry last recurring order
@@ -141,7 +139,7 @@ namespace Nop.Web.Controllers
 
         //My account / Reward points
         [HttpsRequirement(SslRequirement.Yes)]
-        public virtual IActionResult CustomerRewardPoints(int? page)
+        public virtual IActionResult CustomerRewardPoints(int? pageNumber)
         {
             if (!_workContext.CurrentCustomer.IsRegistered())
                 return Challenge();
@@ -149,7 +147,7 @@ namespace Nop.Web.Controllers
             if (!_rewardPointsSettings.Enabled)
                 return RedirectToRoute("CustomerInfo");
 
-            var model = _orderModelFactory.PrepareCustomerRewardPoints(page);
+            var model = _orderModelFactory.PrepareCustomerRewardPoints(pageNumber);
             return View(model);
         }
 

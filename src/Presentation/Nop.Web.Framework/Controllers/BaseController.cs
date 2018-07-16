@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -19,7 +17,7 @@ using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Stores;
 using Nop.Web.Framework.Kendoui;
-using Nop.Web.Framework.Localization;
+using Nop.Web.Framework.Models;
 using Nop.Web.Framework.Mvc.Filters;
 using Nop.Web.Framework.UI;
 
@@ -28,6 +26,7 @@ namespace Nop.Web.Framework.Controllers
     /// <summary>
     /// Base controller
     /// </summary>
+    [PublishModelEvents]
     [SignOutFromExternalAuthentication]
     [ValidatePassword]
     [SaveIpAddress]
@@ -38,17 +37,18 @@ namespace Nop.Web.Framework.Controllers
         #region Rendering
 
         /// <summary>
-        /// Render componentto string
+        /// Render component to string
         /// </summary>
         /// <param name="componentName">Component name</param>
+        /// <param name="arguments">Arguments</param>
         /// <returns>Result</returns>
-        protected virtual string RenderViewComponentToString(string componentName)
+        protected virtual string RenderViewComponentToString(string componentName, object arguments = null)
         {
             //original implementation: https://github.com/aspnet/Mvc/blob/dev/src/Microsoft.AspNetCore.Mvc.ViewFeatures/Internal/ViewComponentResultExecutor.cs
             //we customized it to allow running from controllers
 
             //TODO add support for parameters (pass ViewComponent as input parameter)
-            if (String.IsNullOrEmpty(componentName))
+            if (string.IsNullOrEmpty(componentName))
                 throw new ArgumentNullException(nameof(componentName));
 
             var actionContextAccessor = HttpContext.RequestServices.GetService(typeof(IActionContextAccessor)) as IActionContextAccessor;
@@ -57,7 +57,7 @@ namespace Nop.Web.Framework.Controllers
 
             var context = actionContextAccessor.ActionContext;
 
-            var viewComponentResult = ViewComponent(componentName);
+            var viewComponentResult = ViewComponent(componentName, arguments);
 
             var viewData = this.ViewData;
             if (viewData == null)
@@ -87,7 +87,7 @@ namespace Nop.Web.Framework.Controllers
                 var viewComponentHelper = context.HttpContext.RequestServices.GetRequiredService<IViewComponentHelper>();
                 (viewComponentHelper as IViewContextAware)?.Contextualize(viewContext);
 
-                Task<IHtmlContent> result = viewComponentResult.ViewComponentType == null ? 
+                var result = viewComponentResult.ViewComponentType == null ? 
                     viewComponentHelper.InvokeAsync(viewComponentResult.ViewComponentName, viewComponentResult.Arguments):
                     viewComponentHelper.InvokeAsync(viewComponentResult.ViewComponentType, viewComponentResult.Arguments);
 
@@ -145,10 +145,16 @@ namespace Nop.Web.Framework.Controllers
 
             //set model
             ViewData.Model = model;
+
+            //try to get a view by the name
             var viewResult = razorViewEngine.FindView(actionContext, viewName, false);
             if (viewResult.View == null)
-                throw new ArgumentNullException($"{viewName} view was not found");
-
+            {
+                //or try to get a view by the path
+                viewResult = razorViewEngine.GetView(null, viewName, false);
+                if (viewResult.View == null)
+                    throw new ArgumentNullException($"{viewName} view was not found");
+            }
             using (var stringWriter = new StringWriter())
             {
                 var viewContext = new ViewContext(actionContext, viewResult.View, ViewData, TempData, stringWriter, new HtmlHelperOptions());
@@ -232,23 +238,27 @@ namespace Nop.Web.Framework.Controllers
 
             if (persistForTheNextRequest)
             {
-                if (TempData[dataKey] == null)
+                //1. Compare with null (first usage)
+                //2. For some unknown reasons sometimes List<string> is converted to string[]. And it throws exceptions. That's why we reset it
+                if (TempData[dataKey] == null || !(TempData[dataKey] is List<string>))
                     TempData[dataKey] = new List<string>();
                 ((List<string>)TempData[dataKey]).Add(message);
             }
             else
             {
-                if (ViewData[dataKey] == null)
+                //1. Compare with null (first usage)
+                //2. For some unknown reasons sometimes List<string> is converted to string[]. And it throws exceptions. That's why we reset it
+                if (ViewData[dataKey] == null || !(ViewData[dataKey] is List<string>))
                     ViewData[dataKey] = new List<string>();
                 ((List<string>)ViewData[dataKey]).Add(message);
             }
         }
 
         /// <summary>
-        /// Error's json data for kendo grid
+        /// Error's JSON data for kendo grid
         /// </summary>
         /// <param name="errorMessage">Error message</param>
-        /// <returns>Error's json data</returns>
+        /// <returns>Error's JSON data</returns>
         protected JsonResult ErrorForKendoGridJson(string errorMessage)
         {
             var gridModel = new DataSourceResult
@@ -270,24 +280,6 @@ namespace Nop.Web.Framework.Controllers
             pageHeadBuilder.AddEditPageUrl(editPageUrl);
         }
 
-        /// <summary>
-        /// Get active store scope (for multi-store configuration mode)
-        /// </summary>
-        /// <param name="storeService">Store service</param>
-        /// <param name="workContext">Work context</param>
-        /// <returns>Store ID; 0 if we are in a shared mode</returns>
-        protected virtual int GetActiveStoreScopeConfiguration(IStoreService storeService, IWorkContext workContext)
-        {
-            //ensure that we have 2 (or more) stores
-            if (storeService.GetAllStores().Count < 2)
-                return 0;
-
-            var storeId = workContext.CurrentCustomer.GetAttribute<int>(SystemCustomerAttributeNames.AdminAreaStoreScopeConfiguration);
-            var store = storeService.GetStoreById(storeId);
-
-            return store != null ? store.Id : 0;
-        }
-
         #endregion
 
         #region Localization
@@ -299,7 +291,7 @@ namespace Nop.Web.Framework.Controllers
         /// <param name="languageService">Language service</param>
         /// <param name="locales">Locales</param>
         protected virtual void AddLocales<TLocalizedModelLocal>(ILanguageService languageService, 
-            IList<TLocalizedModelLocal> locales) where TLocalizedModelLocal : ILocalizedModelLocal
+            IList<TLocalizedModelLocal> locales) where TLocalizedModelLocal : ILocalizedLocaleModel
         {
             AddLocales(languageService, locales, null);
         }
@@ -312,7 +304,7 @@ namespace Nop.Web.Framework.Controllers
         /// <param name="locales">Locales</param>
         /// <param name="configure">Configure action</param>
         protected virtual void AddLocales<TLocalizedModelLocal>(ILanguageService languageService, 
-            IList<TLocalizedModelLocal> locales, Action<TLocalizedModelLocal, int> configure) where TLocalizedModelLocal : ILocalizedModelLocal
+            IList<TLocalizedModelLocal> locales, Action<TLocalizedModelLocal, int> configure) where TLocalizedModelLocal : ILocalizedLocaleModel
         {
             foreach (var language in languageService.GetAllLanguages(true))
             {
@@ -344,13 +336,12 @@ namespace Nop.Web.Framework.Controllers
         }
 
         /// <summary>
-        /// Access denied json data for kendo grid
+        /// Access denied JSON data for kendo grid
         /// </summary>
-        /// <returns>Access denied json data</returns>
+        /// <returns>Access denied JSON data</returns>
         protected JsonResult AccessDeniedKendoGridJson()
         {
             var localizationService = EngineContext.Current.Resolve<ILocalizationService>();
-
             return ErrorForKendoGridJson(localizationService.GetResource("Admin.AccessDenied.Description"));
         }
         

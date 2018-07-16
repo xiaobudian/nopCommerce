@@ -1,6 +1,7 @@
-﻿@model TopicModel
+@model TopicModel
 
 <div class="panel-group">
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.TopicDetailsInfoTop, additionalData = Model })
     <div class="panel panel-default">
         <div class="panel-body">
             @(Html.LocalizedEditor<TopicModel, TopicLocalizedModel>("topic-info-localized",
@@ -85,15 +86,17 @@
                     <span asp-validation-for="IsPasswordProtected"></span>
                 </div>
             </div>
-            <div class="form-group advanced-setting" id="pnlPasswordEnabled">
-                <div class="col-md-3">
-                    <nop-label asp-for="Password" />
+            <nop-nested-setting asp-for="IsPasswordProtected">
+                <div class="form-group advanced-setting" id="pnlPasswordEnabled">
+                    <div class="col-md-3">
+                        <nop-label asp-for="Password" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="Password" />
+                        <span asp-validation-for="Password"></span>
+                    </div>
                 </div>
-                <div class="col-md-9">
-                    <nop-editor asp-for="Password" />
-                    <span asp-validation-for="Password"></span>
-                </div>
-            </div>
+            </nop-nested-setting>
             <div class="form-group">
                 <div class="col-md-3">
                     <nop-label asp-for="IncludeInTopMenu" />
@@ -151,7 +154,8 @@
                                 $(document).ready(function() {
                                     var rolesIdsInput = $('#@Html.IdFor(model => model.SelectedCustomerRoleIds)').data("kendoMultiSelect");
                                     rolesIdsInput.setOptions({
-                                        autoClose: false
+                                        autoClose: false,
+                                        filter: "contains"
                                     });
 
                                     @if (Model.AvailableCustomerRoles.Count == 0)
@@ -186,7 +190,8 @@
                     $(document).ready(function() {
                         var storesIdsInput = $('#@Html.IdFor(model => model.SelectedStoreIds)').data("kendoMultiSelect");
                         storesIdsInput.setOptions({
-                            autoClose: false
+                            autoClose: false,
+                            filter: "contains"
                         });
 
                         @if (Model.AvailableStores.Count == 0)
@@ -238,9 +243,10 @@
             </div>
         </div>
     </div>
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.TopicDetailsInfoBottom, additionalData = Model })
 </div>
 
-<script type="text/javascript">
+<script>
     $(document).ready(function () {
         $("#@Html.IdFor(model => model.IsPasswordProtected)").click(togglePassword);
         togglePassword();

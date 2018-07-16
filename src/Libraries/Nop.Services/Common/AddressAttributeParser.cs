@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Xml;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
 using Nop.Services.Localization;
 
@@ -12,8 +15,14 @@ namespace Nop.Services.Common
     /// </summary>
     public partial class AddressAttributeParser : IAddressAttributeParser
     {
+        #region Fields
+
         private readonly IAddressAttributeService _addressAttributeService;
         private readonly ILocalizationService _localizationService;
+
+        #endregion
+
+        #region Ctor
 
         public AddressAttributeParser(IAddressAttributeService addressAttributeService,
             ILocalizationService localizationService)
@@ -21,6 +30,10 @@ namespace Nop.Services.Common
             this._addressAttributeService = addressAttributeService;
             this._localizationService = localizationService;
         }
+
+        #endregion
+
+        #region Utilities
 
         /// <summary>
         /// Gets selected address attribute identifiers
@@ -30,7 +43,7 @@ namespace Nop.Services.Common
         protected virtual IList<int> ParseAddressAttributeIds(string attributesXml)
         {
             var ids = new List<int>();
-            if (String.IsNullOrEmpty(attributesXml))
+            if (string.IsNullOrEmpty(attributesXml))
                 return ids;
 
             try
@@ -42,7 +55,7 @@ namespace Nop.Services.Common
                 {
                     if (node.Attributes != null && node.Attributes["ID"] != null)
                     {
-                        string str1 = node.Attributes["ID"].InnerText.Trim();
+                        var str1 = node.Attributes["ID"].InnerText.Trim();
                         if (int.TryParse(str1, out int id))
                         {
                             ids.Add(id);
@@ -57,6 +70,10 @@ namespace Nop.Services.Common
             return ids;
         }
 
+        #endregion
+
+        #region Methods
+
         /// <summary>
         /// Gets selected address attributes
         /// </summary>
@@ -65,11 +82,11 @@ namespace Nop.Services.Common
         public virtual IList<AddressAttribute> ParseAddressAttributes(string attributesXml)
         {
             var result = new List<AddressAttribute>();
-            if (String.IsNullOrEmpty(attributesXml))
+            if (string.IsNullOrEmpty(attributesXml))
                 return result;
 
             var ids = ParseAddressAttributeIds(attributesXml);
-            foreach (int id in ids)
+            foreach (var id in ids)
             {
                 var attribute = _addressAttributeService.GetAddressAttributeById(id);
                 if (attribute != null)
@@ -88,7 +105,7 @@ namespace Nop.Services.Common
         public virtual IList<AddressAttributeValue> ParseAddressAttributeValues(string attributesXml)
         {
             var values = new List<AddressAttributeValue>();
-            if (String.IsNullOrEmpty(attributesXml))
+            if (string.IsNullOrEmpty(attributesXml))
                 return values;
 
             var attributes = ParseAddressAttributes(attributesXml);
@@ -98,9 +115,9 @@ namespace Nop.Services.Common
                     continue;
 
                 var valuesStr = ParseValues(attributesXml, attribute.Id);
-                foreach (string valueStr in valuesStr)
+                foreach (var valueStr in valuesStr)
                 {
-                    if (!String.IsNullOrEmpty(valueStr))
+                    if (!string.IsNullOrEmpty(valueStr))
                     {
                         if (int.TryParse(valueStr, out int id))
                         {
@@ -123,7 +140,7 @@ namespace Nop.Services.Common
         public virtual IList<string> ParseValues(string attributesXml, int addressAttributeId)
         {
             var selectedAddressAttributeValues = new List<string>();
-            if (String.IsNullOrEmpty(attributesXml))
+            if (string.IsNullOrEmpty(attributesXml))
                 return selectedAddressAttributeValues;
 
             try
@@ -136,7 +153,7 @@ namespace Nop.Services.Common
                 {
                     if (node1.Attributes != null && node1.Attributes["ID"] != null)
                     {
-                        string str1 = node1.Attributes["ID"].InnerText.Trim();
+                        var str1 = node1.Attributes["ID"].InnerText.Trim();
                         if (int.TryParse(str1, out int id))
                         {
                             if (id == addressAttributeId)
@@ -144,7 +161,7 @@ namespace Nop.Services.Common
                                 var nodeList2 = node1.SelectNodes(@"AddressAttributeValue/Value");
                                 foreach (XmlNode node2 in nodeList2)
                                 {
-                                    string value = node2.InnerText.Trim();
+                                    var value = node2.InnerText.Trim();
                                     selectedAddressAttributeValues.Add(value);
                                 }
                             }
@@ -168,11 +185,11 @@ namespace Nop.Services.Common
         /// <returns>Attributes</returns>
         public virtual string AddAddressAttribute(string attributesXml, AddressAttribute attribute, string value)
         {
-            string result = string.Empty;
+            var result = string.Empty;
             try
             {
                 var xmlDoc = new XmlDocument();
-                if (String.IsNullOrEmpty(attributesXml))
+                if (string.IsNullOrEmpty(attributesXml))
                 {
                     var element1 = xmlDoc.CreateElement("Attributes");
                     xmlDoc.AppendChild(element1);
@@ -190,7 +207,7 @@ namespace Nop.Services.Common
                 {
                     if (node1.Attributes != null && node1.Attributes["ID"] != null)
                     {
-                        string str1 = node1.Attributes["ID"].InnerText.Trim();
+                        var str1 = node1.Attributes["ID"].InnerText.Trim();
                         if (int.TryParse(str1, out int id))
                         {
                             if (id == attribute.Id)
@@ -244,16 +261,16 @@ namespace Nop.Services.Common
             {
                 if (a2.IsRequired)
                 {
-                    bool found = false;
+                    var found = false;
                     //selected address attributes
                     foreach (var a1 in attributes1)
                     {
                         if (a1.Id == a2.Id)
                         {
                             var valuesStr = ParseValues(attributesXml, a1.Id);
-                            foreach (string str1 in valuesStr)
+                            foreach (var str1 in valuesStr)
                             {
-                                if (!String.IsNullOrEmpty(str1.Trim()))
+                                if (!string.IsNullOrEmpty(str1.Trim()))
                                 {
                                     found = true;
                                     break;
@@ -265,7 +282,7 @@ namespace Nop.Services.Common
                     //if not found
                     if (!found)
                     {
-                        var notFoundWarning = string.Format(_localizationService.GetResource("ShoppingCart.SelectAttribute"), a2.GetLocalized(a => a.Name));
+                        var notFoundWarning = string.Format(_localizationService.GetResource("ShoppingCart.SelectAttribute"), _localizationService.GetLocalized(a2, a => a.Name));
 
                         warnings.Add(notFoundWarning);
                     }
@@ -275,5 +292,66 @@ namespace Nop.Services.Common
             return warnings;
         }
 
+        /// <summary>
+        /// Get custom address attributes from the passed form
+        /// </summary>
+        /// <param name="form">Form values</param>
+        /// <returns>Attributes in XML format</returns>
+        public virtual string ParseCustomAddressAttributes(IFormCollection form)
+        {
+            if (form == null)
+                throw new ArgumentNullException(nameof(form));
+
+            var attributesXml = string.Empty;
+
+            foreach (var attribute in _addressAttributeService.GetAllAddressAttributes())
+            {
+                var controlId = string.Format(NopCommonDefaults.AddressAttributeControlName, attribute.Id);
+                var attributeValues = form[controlId];
+                switch (attribute.AttributeControlType)
+                {
+                    case AttributeControlType.DropdownList:
+                    case AttributeControlType.RadioList:
+                        if (!StringValues.IsNullOrEmpty(attributeValues) && int.TryParse(attributeValues, out int value) && value > 0)
+                            attributesXml = AddAddressAttribute(attributesXml, attribute, value.ToString());
+                        break;
+
+                    case AttributeControlType.Checkboxes:
+                        foreach (var attributeValue in attributeValues.ToString().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (int.TryParse(attributeValue, out value) && value > 0)
+                                attributesXml = AddAddressAttribute(attributesXml, attribute, value.ToString());
+                        }
+                        break;
+
+                    case AttributeControlType.ReadonlyCheckboxes:
+                        //load read-only (already server-side selected) values
+                        var addressAttributeValues = _addressAttributeService.GetAddressAttributeValues(attribute.Id);
+                        foreach (var addressAttributeValue in addressAttributeValues)
+                        {
+                            if (addressAttributeValue.IsPreSelected)
+                                attributesXml = AddAddressAttribute(attributesXml, attribute, addressAttributeValue.Id.ToString());
+                        }
+                        break;
+
+                    case AttributeControlType.TextBox:
+                    case AttributeControlType.MultilineTextbox:
+                        if (!StringValues.IsNullOrEmpty(attributeValues))
+                            attributesXml = AddAddressAttribute(attributesXml, attribute, attributeValues.ToString().Trim());
+                        break;
+
+                    case AttributeControlType.Datepicker:
+                    case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
+                    case AttributeControlType.FileUpload:
+                    default:
+                        break;
+                }
+            }
+
+            return attributesXml;
+        }
+
+        #endregion
     }
 }

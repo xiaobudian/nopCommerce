@@ -11,26 +11,26 @@ namespace Nop.Web.Controllers
 {
     public partial class DownloadController : BasePublicController
     {
-        private readonly IDownloadService _downloadService;
-        private readonly IProductService _productService;
-        private readonly IOrderService _orderService;
-        private readonly IWorkContext _workContext;
-        private readonly ILocalizationService _localizationService;
         private readonly CustomerSettings _customerSettings;
+        private readonly IDownloadService _downloadService;
+        private readonly ILocalizationService _localizationService;
+        private readonly IOrderService _orderService;
+        private readonly IProductService _productService;
+        private readonly IWorkContext _workContext;
 
-        public DownloadController(IDownloadService downloadService,
-            IProductService productService,
-            IOrderService orderService,
-            IWorkContext workContext,
+        public DownloadController(CustomerSettings customerSettings,
+            IDownloadService downloadService,
             ILocalizationService localizationService,
-            CustomerSettings customerSettings)
+            IOrderService orderService,
+            IProductService productService,
+            IWorkContext workContext)
         {
-            this._downloadService = downloadService;
-            this._productService = productService;
-            this._orderService = orderService;
-            this._workContext = workContext;
-            this._localizationService = localizationService;
             this._customerSettings = customerSettings;
+            this._downloadService = downloadService;
+            this._localizationService = localizationService;
+            this._orderService = orderService;
+            this._productService = productService;
+            this._workContext = workContext;
         }
         
         public virtual IActionResult Sample(int productId)
@@ -52,8 +52,8 @@ namespace Nop.Web.Controllers
             if (download.DownloadBinary == null)
                 return Content("Download data is not available any more.");
             
-            string fileName = !String.IsNullOrWhiteSpace(download.Filename) ? download.Filename : product.Id.ToString();
-            string contentType = !String.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
+            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : product.Id.ToString();
+            var contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
             return new FileContentResult(download.DownloadBinary, contentType) { FileDownloadName = fileName + download.Extension }; 
         }
 
@@ -87,8 +87,7 @@ namespace Nop.Web.Controllers
 
             if (!product.UnlimitedDownloads && orderItem.DownloadCount >= product.MaxNumberOfDownloads)
                 return Content(string.Format(_localizationService.GetResource("DownloadableProducts.ReachedMaximumNumber"), product.MaxNumberOfDownloads));
-            
-
+           
             if (download.UseDownloadUrl)
             {
                 //increase download
@@ -108,8 +107,8 @@ namespace Nop.Web.Controllers
             _orderService.UpdateOrder(order);
 
             //return result
-            string fileName = !String.IsNullOrWhiteSpace(download.Filename) ? download.Filename : product.Id.ToString();
-            string contentType = !String.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
+            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : product.Id.ToString();
+            var contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
             return new FileContentResult(download.DownloadBinary, contentType) { FileDownloadName = fileName + download.Extension };  
         }
 
@@ -142,8 +141,8 @@ namespace Nop.Web.Controllers
                 return Content("Download data is not available any more.");
                 
             //return result
-            string fileName = !String.IsNullOrWhiteSpace(download.Filename) ? download.Filename : product.Id.ToString();
-            string contentType = !String.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
+            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : product.Id.ToString();
+            var contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
             return new FileContentResult(download.DownloadBinary, contentType) { FileDownloadName = fileName + download.Extension };
         }
 
@@ -161,8 +160,8 @@ namespace Nop.Web.Controllers
                 return Content("Download data is not available any more.");
 
             //return result
-            string fileName = !String.IsNullOrWhiteSpace(download.Filename) ? download.Filename : downloadId.ToString();
-            string contentType = !String.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
+            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : downloadId.ToString();
+            var contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
             return new FileContentResult(download.DownloadBinary, contentType) { FileDownloadName = fileName + download.Extension };
         }
 
@@ -189,8 +188,8 @@ namespace Nop.Web.Controllers
                 return Content("Download data is not available any more.");
 
             //return result
-            string fileName = !String.IsNullOrWhiteSpace(download.Filename) ? download.Filename : orderNote.Id.ToString();
-            string contentType = !String.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
+            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : orderNote.Id.ToString();
+            var contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : MimeTypes.ApplicationOctetStream;
             return new FileContentResult(download.DownloadBinary, contentType) { FileDownloadName = fileName + download.Extension };
         }
     }

@@ -6,8 +6,8 @@ using Nop.Core.Caching;
 using Nop.Core.Data;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Directory;
-using Nop.Core.Plugins;
 using Nop.Services.Events;
+using Nop.Services.Plugins;
 using Nop.Services.Stores;
 
 namespace Nop.Services.Directory
@@ -17,64 +17,32 @@ namespace Nop.Services.Directory
     /// </summary>
     public partial class CurrencyService : ICurrencyService
     {
-        #region Constants
-
-        /// <summary>
-        /// Key for caching
-        /// </summary>
-        /// <remarks>
-        /// {0} : currency ID
-        /// </remarks>
-        private const string CURRENCIES_BY_ID_KEY = "Nop.currency.id-{0}";
-        /// <summary>
-        /// Key for caching
-        /// </summary>
-        /// <remarks>
-        /// {0} : show hidden records?
-        /// </remarks>
-        private const string CURRENCIES_ALL_KEY = "Nop.currency.all-{0}";
-        /// <summary>
-        /// Key pattern to clear cache
-        /// </summary>
-        private const string CURRENCIES_PATTERN_KEY = "Nop.currency.";
-
-        #endregion
-
         #region Fields
 
-        private readonly IRepository<Currency> _currencyRepository;
-        private readonly IStoreMappingService _storeMappingService;
-        private readonly ICacheManager _cacheManager;
         private readonly CurrencySettings _currencySettings;
-        private readonly IPluginFinder _pluginFinder;
         private readonly IEventPublisher _eventPublisher;
+        private readonly IPluginFinder _pluginFinder;
+        private readonly IRepository<Currency> _currencyRepository;
+        private readonly IStaticCacheManager _cacheManager;
+        private readonly IStoreMappingService _storeMappingService;
 
         #endregion
 
         #region Ctor
 
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="cacheManager">Cache manager</param>
-        /// <param name="currencyRepository">Currency repository</param>
-        /// <param name="storeMappingService">Store mapping service</param>
-        /// <param name="currencySettings">Currency settings</param>
-        /// <param name="pluginFinder">Plugin finder</param>
-        /// <param name="eventPublisher">Event published</param>
-        public CurrencyService(ICacheManager cacheManager,
-            IRepository<Currency> currencyRepository,
-            IStoreMappingService storeMappingService,
-            CurrencySettings currencySettings,
+        public CurrencyService(CurrencySettings currencySettings,
+            IEventPublisher eventPublisher,
             IPluginFinder pluginFinder,
-            IEventPublisher eventPublisher)
+            IRepository<Currency> currencyRepository,
+            IStaticCacheManager cacheManager,
+            IStoreMappingService storeMappingService)
         {
-            this._cacheManager = cacheManager;
-            this._currencyRepository = currencyRepository;
-            this._storeMappingService = storeMappingService;
             this._currencySettings = currencySettings;
-            this._pluginFinder = pluginFinder;
             this._eventPublisher = eventPublisher;
+            this._pluginFinder = pluginFinder;
+            this._currencyRepository = currencyRepository;
+            this._cacheManager = cacheManager;
+            this._storeMappingService = storeMappingService;
         }
 
         #endregion
@@ -106,10 +74,13 @@ namespace Nop.Services.Directory
         {
             if (currency == null)
                 throw new ArgumentNullException(nameof(currency));
-            
+
+            if (currency is IEntityForCaching)
+                throw new ArgumentException("Cacheable entities are not supported by Entity Framework");
+
             _currencyRepository.Delete(currency);
 
-            _cacheManager.RemoveByPattern(CURRENCIES_PATTERN_KEY);
+            _cacheManager.RemoveByPattern(NopDirectoryDefaults.CurrenciesPatternCacheKey);
 
             //event notification
             _eventPublisher.EntityDeleted(currency);
@@ -119,26 +90,45 @@ namespace Nop.Services.Directory
         /// Gets a currency
         /// </summary>
         /// <param name="currencyId">Currency identifier</param>
+        /// <param name="loadCacheableCopy">A value indicating whether to load a copy that could be cached (workaround until Entity Framework supports 2-level caching)</param>
         /// <returns>Currency</returns>
-        public virtual Currency GetCurrencyById(int currencyId)
+        public virtual Currency GetCurrencyById(int currencyId, bool loadCacheableCopy = true)
         {
             if (currencyId == 0)
                 return null;
-            
-            string key = string.Format(CURRENCIES_BY_ID_KEY, currencyId);
-            return _cacheManager.Get(key, () => _currencyRepository.GetById(currencyId));
+
+            Func<Currency> loadCurrencyFunc = () =>
+            {
+                return _currencyRepository.GetById(currencyId);
+            };
+
+            if (loadCacheableCopy)
+            {
+                //cacheable copy
+                var key = string.Format(NopDirectoryDefaults.CurrenciesByIdCacheKey, currencyId);
+                return _cacheManager.Get(key, () =>
+                {
+                    var currency = loadCurrencyFunc();
+                    if (currency == null)
+                        return null;
+                    return new CurrencyForCaching(currency);
+                });
+            }
+            return loadCurrencyFunc();
         }
 
         /// <summary>
         /// Gets a currency by code
         /// </summary>
         /// <param name="currencyCode">Currency code</param>
+        /// <param name="loadCacheableCopy">A value indicating whether to load a copy that could be cached (workaround until Entity Framework supports 2-level caching)</param>
         /// <returns>Currency</returns>
-        public virtual Currency GetCurrencyByCode(string currencyCode)
+        public virtual Currency GetCurrencyByCode(string currencyCode, bool loadCacheableCopy = true)
         {
-            if (String.IsNullOrEmpty(currencyCode))
+            if (string.IsNullOrEmpty(currencyCode))
                 return null;
-            return GetAllCurrencies(true).FirstOrDefault(c => c.CurrencyCode.ToLower() == currencyCode.ToLower());
+            return GetAllCurrencies(true, loadCacheableCopy: loadCacheableCopy)
+                .FirstOrDefault(c => c.CurrencyCode.ToLower() == currencyCode.ToLower());
         }
 
         /// <summary>
@@ -146,18 +136,36 @@ namespace Nop.Services.Directory
         /// </summary>
         /// <param name="showHidden">A value indicating whether to show hidden records</param>
         /// <param name="storeId">Load records allowed only in a specified store; pass 0 to load all records</param>
+        /// <param name="loadCacheableCopy">A value indicating whether to load a copy that could be cached (workaround until Entity Framework supports 2-level caching)</param>
         /// <returns>Currencies</returns>
-        public virtual IList<Currency> GetAllCurrencies(bool showHidden = false, int storeId = 0)
+        public virtual IList<Currency> GetAllCurrencies(bool showHidden = false, int storeId = 0, bool loadCacheableCopy = true)
         {
-            string key = string.Format(CURRENCIES_ALL_KEY, showHidden);
-            var currencies = _cacheManager.Get(key, () =>
+            Func<IList<Currency>> loadCurrenciesFunc = () =>
             {
                 var query = _currencyRepository.Table;
                 if (!showHidden)
                     query = query.Where(c => c.Published);
                 query = query.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Id);
                 return query.ToList();
-            });
+            };
+
+            IList<Currency> currencies;
+            if (loadCacheableCopy)
+            {
+                //cacheable copy
+                var key = string.Format(NopDirectoryDefaults.CurrenciesAllCacheKey, showHidden);
+                currencies = _cacheManager.Get(key, () =>
+                {
+                    var result = new List<Currency>();
+                    foreach (var currency in loadCurrenciesFunc())
+                        result.Add(new CurrencyForCaching(currency));
+                    return result;
+                });
+            }
+            else
+            {
+                currencies = loadCurrenciesFunc();
+            }
 
             //store mapping
             if (storeId > 0)
@@ -178,9 +186,12 @@ namespace Nop.Services.Directory
             if (currency == null)
                 throw new ArgumentNullException(nameof(currency));
 
+            if (currency is IEntityForCaching)
+                throw new ArgumentException("Cacheable entities are not supported by Entity Framework");
+
             _currencyRepository.Insert(currency);
 
-            _cacheManager.RemoveByPattern(CURRENCIES_PATTERN_KEY);
+            _cacheManager.RemoveByPattern(NopDirectoryDefaults.CurrenciesPatternCacheKey);
 
             //event notification
             _eventPublisher.EntityInserted(currency);
@@ -195,9 +206,12 @@ namespace Nop.Services.Directory
             if (currency == null)
                 throw new ArgumentNullException(nameof(currency));
 
+            if (currency is IEntityForCaching)
+                throw new ArgumentException("Cacheable entities are not supported by Entity Framework");
+
             _currencyRepository.Update(currency);
 
-            _cacheManager.RemoveByPattern(CURRENCIES_PATTERN_KEY);
+            _cacheManager.RemoveByPattern(NopDirectoryDefaults.CurrenciesPatternCacheKey);
 
             //event notification
             _eventPublisher.EntityUpdated(currency);
@@ -235,7 +249,7 @@ namespace Nop.Services.Directory
             if (targetCurrencyCode == null)
                 throw new ArgumentNullException(nameof(targetCurrencyCode));
 
-            decimal result = amount;
+            var result = amount;
             if (sourceCurrencyCode.Id == targetCurrencyCode.Id)
                 return result;
             if (result != decimal.Zero && sourceCurrencyCode.Id != targetCurrencyCode.Id)
@@ -261,10 +275,10 @@ namespace Nop.Services.Directory
             if (primaryExchangeRateCurrency == null)
                 throw new Exception("Primary exchange rate currency cannot be loaded");
 
-            decimal result = amount; 
+            var result = amount;
             if (result != decimal.Zero && sourceCurrencyCode.Id != primaryExchangeRateCurrency.Id)
             {
-                decimal exchangeRate = sourceCurrencyCode.Rate;
+                var exchangeRate = sourceCurrencyCode.Rate;
                 if (exchangeRate == decimal.Zero)
                     throw new NopException($"Exchange rate not found for currency [{sourceCurrencyCode.Name}]");
                 result = result / exchangeRate;
@@ -287,10 +301,10 @@ namespace Nop.Services.Directory
             if (primaryExchangeRateCurrency == null)
                 throw new Exception("Primary exchange rate currency cannot be loaded");
 
-            decimal result = amount;
+            var result = amount;
             if (result != decimal.Zero && targetCurrencyCode.Id != primaryExchangeRateCurrency.Id)
             {
-                decimal exchangeRate = targetCurrencyCode.Rate;
+                var exchangeRate = targetCurrencyCode.Rate;
                 if (exchangeRate == decimal.Zero)
                     throw new NopException($"Exchange rate not found for currency [{targetCurrencyCode.Name}]");
                 result = result * exchangeRate;
@@ -328,7 +342,7 @@ namespace Nop.Services.Directory
         }
 
         #endregion
-        
+
         #region Exchange rate providers
 
         /// <summary>
@@ -370,7 +384,7 @@ namespace Nop.Services.Directory
 
             return exchangeRateProviders.OrderBy(tp => tp.PluginDescriptor).ToList();
         }
-        
+
         #endregion
 
         #endregion

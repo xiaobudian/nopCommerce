@@ -8,12 +8,22 @@ namespace Nop.Services.Caching
     /// </summary>
     public partial class ClearCacheTask : IScheduleTask
     {
+        #region Fields
+
         private readonly IStaticCacheManager _staticCacheManager;
+
+        #endregion
+
+        #region Ctor
 
         public ClearCacheTask(IStaticCacheManager staticCacheManager)
         {
             this._staticCacheManager = staticCacheManager;
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Executes a task
@@ -22,5 +32,7 @@ namespace Nop.Services.Caching
         {
             _staticCacheManager.Clear();
         }
+
+        #endregion
     }
 }

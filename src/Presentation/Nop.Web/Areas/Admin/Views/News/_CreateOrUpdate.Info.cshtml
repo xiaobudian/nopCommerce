@@ -1,6 +1,7 @@
-﻿@model NewsItemModel
+@model NewsItemModel
 
 <div class="panel-group">
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.NewsDetailsInfoTop, additionalData = Model })
     <div class="panel panel-default">
         <div class="panel-body">
             <div class="form-group" @(Model.AvailableLanguages.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
@@ -83,7 +84,8 @@
                                 $(document).ready(function() {
                                     var storesIdsInput = $('#@Html.IdFor(model => model.SelectedStoreIds)').data("kendoMultiSelect");
                                     storesIdsInput.setOptions({
-                                        autoClose: false
+                                        autoClose: false,
+                                        filter: "contains"
                                     });
 
                                     @if (Model.AvailableStores.Count == 0)
@@ -117,4 +119,5 @@
             </div>
         </div>
     </div>
+    @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.NewsDetailsInfoBottom, additionalData = Model })
 </div>

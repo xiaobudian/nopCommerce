@@ -9,10 +9,7 @@ namespace Nop.Services.Orders
     /// </summary>
     public partial class PlaceOrderResult
     {
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        public PlaceOrderResult() 
+        public PlaceOrderResult()
         {
             this.Errors = new List<string>();
         }
@@ -22,7 +19,7 @@ namespace Nop.Services.Orders
         /// </summary>
         public bool Success
         {
-            get { return (!this.Errors.Any()); }
+            get { return (!Errors.Any()); }
         }
 
         /// <summary>
@@ -31,14 +28,14 @@ namespace Nop.Services.Orders
         /// <param name="error">Error</param>
         public void AddError(string error)
         {
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
 
         /// <summary>
         /// Errors
         /// </summary>
         public IList<string> Errors { get; set; }
-        
+
         /// <summary>
         /// Gets or sets the placed order
         /// </summary>

@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
-using Nop.Core;
 using Nop.Core.Configuration;
 using Nop.Core.Infrastructure;
 
@@ -16,24 +15,33 @@ namespace Nop.Services.Helpers
     {
         #region Fields
 
-        private readonly NopConfig _nopConfig;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly INopFileProvider _fileProvider;
+        private readonly NopConfig _nopConfig;
+
         private static readonly object _locker = new object();
 
         #endregion
 
         #region Ctor
 
-        public UserAgentHelper(NopConfig nopConfig, IHttpContextAccessor httpContextAccessor)
+        public UserAgentHelper(IHttpContextAccessor httpContextAccessor,
+            INopFileProvider fileProvider,
+            NopConfig nopConfig)
         {
-            this._nopConfig = nopConfig;
             this._httpContextAccessor = httpContextAccessor;
+            this._fileProvider = fileProvider;
+            this._nopConfig = nopConfig;
         }
 
         #endregion
 
         #region Utilities
 
+        /// <summary>
+        /// Get BrowscapXmlHelper
+        /// </summary>
+        /// <returns>BrowscapXmlHelper</returns>
         [MethodImpl(MethodImplOptions.Synchronized)]
         protected virtual BrowscapXmlHelper GetBrowscapXmlHelper()
         {
@@ -51,12 +59,12 @@ namespace Nop.Services.Helpers
                 if (Singleton<BrowscapXmlHelper>.Instance != null)
                     return Singleton<BrowscapXmlHelper>.Instance;
 
-                var userAgentStringsPath = CommonHelper.MapPath(_nopConfig.UserAgentStringsPath);
+                var userAgentStringsPath = _fileProvider.MapPath(_nopConfig.UserAgentStringsPath);
                 var crawlerOnlyUserAgentStringsPath = !string.IsNullOrEmpty(_nopConfig.CrawlerOnlyUserAgentStringsPath)
-                    ? CommonHelper.MapPath(_nopConfig.CrawlerOnlyUserAgentStringsPath)
+                    ? _fileProvider.MapPath(_nopConfig.CrawlerOnlyUserAgentStringsPath)
                     : string.Empty;
 
-                var browscapXmlHelper = new BrowscapXmlHelper(userAgentStringsPath, crawlerOnlyUserAgentStringsPath);
+                var browscapXmlHelper = new BrowscapXmlHelper(userAgentStringsPath, crawlerOnlyUserAgentStringsPath, _fileProvider);
                 Singleton<BrowscapXmlHelper>.Instance = browscapXmlHelper;
 
                 return Singleton<BrowscapXmlHelper>.Instance;
@@ -87,7 +95,7 @@ namespace Nop.Services.Helpers
                     return false;
 
                 var userAgent = _httpContextAccessor.HttpContext.Request.Headers[HeaderNames.UserAgent];
-                return browscapXmlHelper.IsCrawler(userAgent);
+                return !string.IsNullOrWhiteSpace(userAgent) && browscapXmlHelper.IsCrawler(userAgent);
             }
             catch
             {
@@ -139,7 +147,7 @@ namespace Nop.Services.Helpers
             var userAgent = _httpContextAccessor.HttpContext.Request.Headers[HeaderNames.UserAgent].ToString();
             return !string.IsNullOrEmpty(userAgent) && userAgent.IndexOf("MSIE 8.0", StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
-        
+
         #endregion
     }
 }

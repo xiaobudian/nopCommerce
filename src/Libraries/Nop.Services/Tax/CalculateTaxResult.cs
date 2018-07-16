@@ -8,9 +8,6 @@ namespace Nop.Services.Tax
     /// </summary>
     public partial class CalculateTaxResult
     {
-        /// <summary>
-        /// Ctor
-        /// </summary>
         public CalculateTaxResult()
         {
             this.Errors = new List<string>();
@@ -31,9 +28,9 @@ namespace Nop.Services.Tax
         /// </summary>
         public bool Success
         {
-            get 
-            { 
-                return !this.Errors.Any(); 
+            get
+            {
+                return !Errors.Any();
             }
         }
 
@@ -43,7 +40,7 @@ namespace Nop.Services.Tax
         /// <param name="error">Error</param>
         public void AddError(string error)
         {
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
     }
 }

@@ -13,15 +13,15 @@ using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Services.Security;
 using Nop.Services.Stores;
+using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Kendoui;
 using Nop.Web.Framework.Mvc;
 using Nop.Web.Framework.Mvc.Filters;
-using Nop.Web.Framework.Security;
 
 namespace Nop.Plugin.Pickup.PickupInStore.Controllers
 {
-    [Area("Admin")]
+    [Area(AreaNames.Admin)]
     [AuthorizeAdmin]
     public class PickupInStoreController : BasePluginController
     {
@@ -73,7 +73,7 @@ namespace Nop.Plugin.Pickup.PickupInStore.Controllers
         public IActionResult List(DataSourceRequest command)
         {
             if (!_permissionService.Authorize(StandardPermissionProvider.ManageShippingSettings))
-                return ErrorForKendoGridJson("Access denied");
+                return AccessDeniedKendoGridJson();
 
             var pickupPoints = _storePickupPointService.GetAllStorePickupPoints(pageIndex: command.Page - 1, pageSize: command.PageSize);
             var model = pickupPoints.Select(point =>
@@ -137,6 +137,7 @@ namespace Nop.Plugin.Pickup.PickupInStore.Controllers
             {
                 Address1 = model.Address.Address1,
                 City = model.Address.City,
+                County = model.Address.County,
                 CountryId = model.Address.CountryId,
                 StateProvinceId = model.Address.StateProvinceId,
                 ZipPostalCode = model.Address.ZipPostalCode,
@@ -188,6 +189,7 @@ namespace Nop.Plugin.Pickup.PickupInStore.Controllers
                 {
                     Address1 = address.Address1,
                     City = address.City,
+                    County = address.County,
                     CountryId = address.CountryId,
                     StateProvinceId = address.StateProvinceId,
                     ZipPostalCode = address.ZipPostalCode
@@ -230,6 +232,7 @@ namespace Nop.Plugin.Pickup.PickupInStore.Controllers
             var address = _addressService.GetAddressById(pickupPoint.AddressId) ?? new Address { CreatedOnUtc = DateTime.UtcNow };
             address.Address1 = model.Address.Address1;
             address.City = model.Address.City;
+            address.County = model.Address.County;
             address.CountryId = model.Address.CountryId;
             address.StateProvinceId = model.Address.StateProvinceId;
             address.ZipPostalCode = model.Address.ZipPostalCode;

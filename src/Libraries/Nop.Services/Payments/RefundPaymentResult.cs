@@ -9,12 +9,7 @@ namespace Nop.Services.Payments
     /// </summary>
     public partial class RefundPaymentResult
     {
-        private PaymentStatus _newPaymentStatus = PaymentStatus.Pending;
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        public RefundPaymentResult() 
+        public RefundPaymentResult()
         {
             this.Errors = new List<string>();
         }
@@ -24,16 +19,16 @@ namespace Nop.Services.Payments
         /// </summary>
         public bool Success
         {
-            get { return (!this.Errors.Any()); }
+            get { return (!Errors.Any()); }
         }
 
         /// <summary>
         /// Add error
         /// </summary>
         /// <param name="error">Error</param>
-        public void AddError(string error) 
+        public void AddError(string error)
         {
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
 
         /// <summary>
@@ -44,16 +39,6 @@ namespace Nop.Services.Payments
         /// <summary>
         /// Gets or sets a payment status after processing
         /// </summary>
-        public PaymentStatus NewPaymentStatus
-        {
-            get
-            {
-                return _newPaymentStatus;
-            }
-            set
-            {
-                _newPaymentStatus = value;
-            }
-        }
+        public PaymentStatus NewPaymentStatus { get; set; } = PaymentStatus.Pending;
     }
 }

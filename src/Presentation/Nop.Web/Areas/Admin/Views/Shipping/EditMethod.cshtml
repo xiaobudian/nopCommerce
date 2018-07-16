@@ -1,4 +1,4 @@
-﻿@model ShippingMethodModel
+@model ShippingMethodModel
 
 @{
     //page title
@@ -30,6 +30,7 @@
                 <i class="fa fa-trash-o"></i>
                 @T("Admin.Common.Delete")
             </span>
+            @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.ShippingMethodDetailsButtons, additionalData = Model })
         </div>
     </div>
     @await Html.PartialAsync("_CreateOrUpdateMethod", Model)

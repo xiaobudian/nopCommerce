@@ -1,4 +1,7 @@
 ﻿/* COMMON */
+.content{
+		padding-bottom: 55px;
+}
 ul, ol {
     margin-bottom: 0;
 }
@@ -13,6 +16,13 @@ ul, ol {
 }
 .margin-t-5 {
     margin-top: 5px;
+}
+.margin-b-5 {
+    margin-bottom: 5px;
+}
+.v-center {
+    display: flex;
+    align-items: center;
 }
 .please-wait {
     background: url('images/ajax_loader_small.gif') no-repeat;
@@ -90,6 +100,7 @@ ul.common-list {
     position: fixed;
     width: 61px;
     height: 48px;
+    z-index: 1000;
 }
 .btn-back-top::before {
     content: "";
@@ -540,9 +551,6 @@ td.k-state-focused.k-state-selected {
     font-weight: bold;
     padding: 10px 8px;
 }
-.k-grid-header .k-header:first-child {
-    border-left: none;
-}
 .k-grid.k-widget {
     overflow-x: auto;
     border: 1px solid #e8e8e8;
@@ -981,6 +989,12 @@ input[type=file].form-control {
 .mce-container {
     max-width: 100%;
 }
+.mce-container label {
+    max-width: inherit;
+}
+.mce-fullscreen {
+    z-index: 10000 !important;
+}
 
 /* TABLES */
 table td .form-group {
@@ -1125,6 +1139,116 @@ span.grid-report-item.red {
     margin: 0 0 8px 5px;
 }
 
+/*nested settings*/
+.parent-setting.opened {
+    margin-bottom: 0;
+    position: relative;
+}
+
+.parent-setting.opened > div:first-child {
+    padding-bottom: 5px;
+}
+
+.parent-setting.opened div[class^="col-md-"] + div[class^="col-md-"] {
+    padding-right: 30px;
+    height: 100%;
+    position: static;
+    padding-bottom: 5px;
+}
+
+.parent-setting.opened div[class^="col-md-"] + div[class^="col-md-"]:before,
+.parent-setting.opened + .nested-setting .form-group div[class^="col-md-"] + div[class^="col-md-"]:before,
+.parent-setting.opened + .nested-setting .form-group:last-child div[class^="col-md-"] + div[class^="col-md-"]:before {
+    border-right: 1px solid #c1c1c1;
+}
+
+.parent-setting.opened div + div:before {
+    position: absolute;
+    height: 100%;
+    content: "";
+    margin-right: -10px;
+    top: 15px;
+    z-index: 10;
+}
+
+.parent-setting.opened div + div input[type=checkbox] {
+    margin-right: -15px;
+    z-index: 100;
+    position: relative;
+}
+
+.parent-setting.opened + .nested-setting .form-group {
+    margin-bottom: 0;
+    position: relative;
+}
+
+.parent-setting.opened + .nested-setting .form-group > div[class^="col-md-"]:first-child {
+    padding-bottom: 5px;
+}
+
+.parent-setting.opened + .nested-setting .form-group:last-child > div[class^="col-md-"]:first-child {
+    padding-bottom: 0;
+}
+
+.parent-setting.opened + .nested-setting .form-group div[class^="col-md-"] + div[class^="col-md-"] {
+    position: static;
+    padding-right: 30px;
+    padding-bottom: 5px;
+    height: 100%;
+}
+
+.parent-setting.opened + .nested-setting .form-group:last-child div[class^="col-md-"] + div[class^="col-md-"] {
+    padding-bottom: 0;
+}
+
+.parent-setting.opened + .nested-setting .form-group div[class^="col-md-"] + div[class^="col-md-"]:before {
+    position: absolute;
+    height: 100%;
+    content: "";
+    margin-right: -10px;
+}
+
+.parent-setting.opened + .nested-setting .form-group.parent-setting div[class^="col-md-"] + div[class^="col-md-"]:before {
+    position: absolute;
+    height: 36px;
+    content: "";
+    margin-right: -10px;
+    margin-top: -18px;
+}
+
+.parent-setting.opened + .nested-setting .form-group.parent-setting.opened > div[class^="col-md-"] + div[class^="col-md-"]:after {
+    display: none;
+}
+
+.parent-setting.opened + .nested-setting .form-group:last-child {
+    margin-bottom: 5px;
+}
+
+.parent-setting.opened + .nested-setting .form-group > div[class^="col-md-"] + div[class^="col-md-"]:after {
+    border-bottom: 1px solid #c1c1c1;
+    content: "";
+    position: absolute;
+    width: 10px;
+    display: block;
+    margin-right: -10px;
+    top: 17px;
+}
+
+.parent-setting.opened + .nested-setting .form-group:last-child div[class^="col-md-"] + div[class^="col-md-"] {
+    border-right: none;
+}
+
+.parent-setting.opened + .nested-setting .form-group:last-child div[class^="col-md-"] + div[class^="col-md-"]:before {
+    position: absolute;
+    height: 17px;
+    content: "";
+    margin-right: -10px;
+}
+
+.basic-settings-mode .parent-setting.parent-setting-advanced.opened div[class^="col-md-"] + div[class^="col-md-"]:before {
+    display: none;
+}
+
 /*advanced settings*/
 .basic-settings-mode .advanced-setting {
     display: none !important;
@@ -1205,36 +1329,46 @@ span.grid-report-item.red {
 /*bootstrap touchspin*/
 .bootstrap-touchspin {
     max-width: 300px;
+    width: 100%;
 }
 .bootstrap-touchspin input {
     height: auto;
     display: table-cell !important;
     min-height: 34px;
-    border-left: none;
 }
 .bootstrap-touchspin-postfix {
-    border-left: none;
+    border-right: none;
 }
 .bootstrap-touchspin .input-group-btn-vertical i {
-    left: 6px;
+    right: 6px;
 }
 .input-group-addon.bootstrap-touchspin-postfix {
     background-color: #eee;
     height: 34px;
+    padding-left: 30px;
 }
-.bootstrap-touchspin .input-group-btn-vertical>.btn {
+.bootstrap-touchspin .input-group-btn-vertical {
+    left: 22px;
+    right: auto;
+}
+.bootstrap-touchspin .input-group-btn-vertical > .btn {
     background: #fff;
     border-color: #d2d6de;
     border-radius: 0;
-    padding: 0 10px;
     height: 18px;
+    font-size: 0;
+    padding-left: 15px;
+    padding-right: 5px;
 }
-.bootstrap-touchspin .input-group-btn-vertical>.btn:hover {
+.bootstrap-touchspin .input-group-btn-vertical > .btn:before {
+    font-size: 9px;
+}
+.bootstrap-touchspin .input-group-btn-vertical > .btn:hover {
     border-color: #afafaf;
 }
 .bootstrap-touchspin .input-group-btn-vertical .bootstrap-touchspin-down {
-   margin-top: -1px;
-   height: 17px;
+    margin-top: 16px;
+    height: 17px;
 }
 
 /* THROBBER */
@@ -1315,6 +1449,66 @@ span.grid-report-item.red {
     .k-grid.k-widget > table {
         min-width: 400px;
     }
+
+    /*nested settings*/
+    .parent-setting.opened {
+        margin-bottom: 5px;
+        position: static;
+        height: auto !important;
+    }
+
+    .parent-setting.opened > div[class^="col-md-"]:first-child {
+        padding-bottom: 0;
+    }
+
+    .parent-setting.opened div[class^="col-md-"] + div[class^="col-md-"] {
+        padding-bottom: 0;
+    }
+
+    .parent-setting.opened div[class^="col-md-"] + div[class^="col-md-"] {
+        padding-right: 15px;
+        height: auto;
+    }
+
+    .parent-setting.opened div[class^="col-md-"] + div[class^="col-md-"]:before {
+        display: none;
+    }
+
+    .parent-setting.opened div[class^="col-md-"] + div[class^="col-md-"] input[type=checkbox] {
+        margin-right: 0;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group {
+        margin-bottom: 5px;
+        height: auto !important;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group div[class^="col-md-"] + div[class^="col-md-"] {
+        position: static;
+        padding-right: 15px;
+        height: auto;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group div[class^="col-md-"] + div[class^="col-md-"]:before {
+        display: none;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group > div[class^="col-md-"] + div[class^="col-md-"]:after {
+        display: none;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group:last-child div[class^="col-md-"] + div[class^="col-md-"]:before {
+        display: none;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group > div[class^="col-md-"]:first-child {
+        padding-bottom: 0;
+    }
+
+    .parent-setting.opened + .nested-setting .form-group div[class^="col-md-"] + div[class^="col-md-"] {
+        padding-bottom: 0;
+    }
+
 }
 
 @media (max-width: 992px) {
@@ -1358,10 +1552,7 @@ span.grid-report-item.red {
 
     /* FORM ELEMENTS */
     .form-horizontal .panel-popup .label-wrapper {
-        float: none;
-    }
-    .form-horizontal .panel-popup .ico-help  {
-        display: none;
+        float: right;
     }
 }
 

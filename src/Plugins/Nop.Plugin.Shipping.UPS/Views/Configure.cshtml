@@ -6,7 +6,7 @@
 @using Nop.Plugin.Shipping.UPS;
 
 <form asp-controller="ShippingUPS" asp-action="Configure" method="post">
-    <script type="text/javascript">
+    <script>
         $(document).ready(function () {
             $("#PackingType").change(togglePackingType);
             togglePackingType();
@@ -39,6 +39,15 @@
                     <div class="col-md-9">
                         <nop-editor asp-for="Url" />
                         <span asp-validation-for="Url"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="AccountNumber" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="AccountNumber" />
+                        <span asp-validation-for="AccountNumber"></span>
                     </div>
                 </div>
                 <div class="form-group">

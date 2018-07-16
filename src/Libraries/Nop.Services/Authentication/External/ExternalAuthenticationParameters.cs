@@ -51,6 +51,11 @@ namespace Nop.Services.Authentication.External
     [Serializable]
     public class ExternalAuthenticationClaim
     {
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <param name="value">Value</param>
         public ExternalAuthenticationClaim(string type, string value)
         {
             this.Type = type;

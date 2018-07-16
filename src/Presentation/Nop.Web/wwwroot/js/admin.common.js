@@ -122,6 +122,10 @@ function saveUserPreferences(url, name, value) {
 
 function warningValidation(validationUrl, warningElementName, passedParameters) {
     addAntiForgeryToken(passedParameters);
+    var element = $('[data-valmsg-for="' + warningElementName + '"]');
+    element.removeClass("warning");
+    element.html('');
+
     $.ajax({
         cache: false,
         url: validationUrl,
@@ -129,18 +133,42 @@ function warningValidation(validationUrl, warningElementName, passedParameters) 
         dataType: "json",
         data: passedParameters,
         success: function (data) {
-            var element = $('[data-valmsg-for="' + warningElementName + '"]');
             if (data.Result) {
                 element.addClass("warning");
                 element.html(data.Result);
             }
-            else {
-                element.removeClass("warning");
-                element.html('');
-            }
         }
     });
 };
+
+function toggleNestedSetting(parentSettingName, parentFormGroupId) {
+    if ($('input[name="' + parentSettingName + '"]').is(':checked')) {
+        $('#' + parentFormGroupId).addClass('opened');
+    } else {
+        $('#' + parentFormGroupId).removeClass('opened');
+    }
+}
+
+function parentSettingClick(e) {
+    toggleNestedSetting(e.data.parentSettingName, e.data.parentFormGroupId);
+}
+
+function initNestedSetting(parentSettingName, parentSettingId, nestedSettingId) {
+    var parentFormGroup = $('input[name="' + parentSettingName +'"]').closest('.form-group');
+    var parentFormGroupId = $(parentFormGroup).attr('id');
+    if (!parentFormGroupId) {
+        parentFormGroupId = parentSettingId;
+    }
+    $(parentFormGroup).addClass('parent-setting').attr('id', parentFormGroupId);
+    if ($('#' + nestedSettingId + ' .form-group').length == $('#' + nestedSettingId + ' .form-group.advanced-setting').length) {
+        $('#' + parentFormGroupId).addClass('parent-setting-advanced');
+    }
+
+    //$(document).on('click', 'input[name="' + parentSettingName + '"]', toggleNestedSetting(parentSettingName, parentFormGroupId));
+    $('input[name="' + parentSettingName + '"]').click(
+        { parentSettingName: parentSettingName, parentFormGroupId: parentFormGroupId }, parentSettingClick);
+    toggleNestedSetting(parentSettingName, parentFormGroupId);
+}
 
 //scroll to top
 (function ($) {
